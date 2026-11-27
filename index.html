@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permit Office Kaizen</title>
+<meta name="description" content="A Lean Green Belt team exercise: run a government permit office, measure it, find the real root causes and cut the approval cycle time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9f0fb;--panel:#fbfdff;--panel2:#eef4fd;--ink:#27334d;--muted:#6b7a96;--muted2:#b9c6dd;--line:#d6e1f2;--accent:#3b6cf0;--accent-ink:#fff;--good:#2f9e7a;--bad:#d9534f;--warn:#e0a21b;
+--f-display:'Fredoka',system-ui,sans-serif;--f-body:'Nunito',system-ui,sans-serif;--f-mono:'JetBrains Mono',ui-monospace,monospace;--shadow:0 6px 20px rgba(60,80,130,.12);--r:14px}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);padding:12px 16px 40px}
+[hidden]{display:none!important}
+button{font:inherit}
+.ic{width:16px;height:16px;vertical-align:-3px}
+.wrap{max-width:1500px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:12px}
+.brand{flex:1 1 260px}.brand h1{font-family:var(--f-display);font-weight:700;font-size:24px;margin:0;letter-spacing:.01em}.brand span{font-size:12.5px;color:var(--muted)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px}
+.stat{display:flex;flex-direction:column;min-width:54px}.stat .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat b{font-family:var(--f-mono);font-size:17px;font-weight:700;line-height:1.2}.stat b.neg{color:var(--bad)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.btn{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;color:var(--ink);cursor:pointer;transition:.12s;font-size:14px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.on,.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn.small{padding:4px 10px;font-size:12.5px}
+.game{display:grid;gap:12px;grid-template-columns:minmax(0,1fr) 350px;align-items:start}
+@media(max-width:1020px){.game{grid-template-columns:minmax(0,1fr)}}
+.game.nopanel{grid-template-columns:minmax(0,1fr)}.game.nopanel .side{display:none}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+.world{position:relative;background:linear-gradient(180deg,#f3f7ff,#e3ebf8);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.world canvas{display:block;width:100%;height:auto;outline:none;touch-action:none}
+.world .paneltab{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:4;writing-mode:vertical-rl;background:var(--accent);color:#fff;border:0;border-radius:10px 0 0 10px;padding:12px 6px;font:700 12px var(--f-body);letter-spacing:.06em;cursor:pointer;box-shadow:var(--shadow)}
+.sidehide{align-self:flex-end;margin-bottom:-4px}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+/* on-map overlays */
+.world .dock{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;gap:4px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow);z-index:3;backdrop-filter:blur(4px)}
+.dock button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;padding:6px 8px;border:0;background:transparent;border-radius:10px;cursor:pointer;font:700 11px var(--f-body);color:var(--ink)}
+.dock button:hover{background:var(--panel2)}.dock button.on{background:var(--accent);color:#fff}
+.dock button .ic{width:22px;height:22px}
+.world .fly{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);display:flex;gap:6px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow);z-index:3;max-width:calc(100% - 20px);flex-wrap:wrap;justify-content:center}
+.fly button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 10px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font:700 12px var(--f-body);color:var(--ink);text-align:left}
+.fly button small{font:600 10.5px var(--f-mono);color:var(--muted)}.fly button.on{border-color:var(--accent);background:var(--panel2)}.fly button:disabled{opacity:.5;cursor:not-allowed}
+.world .ctx{position:absolute;z-index:6;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;min-width:190px;display:flex;flex-direction:column;gap:2px}
+.ctx h4{margin:4px 8px 4px;font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ctx button{display:flex;align-items:center;gap:8px;padding:6px 8px;border:0;background:transparent;border-radius:8px;cursor:pointer;font:700 12.5px var(--f-body);color:var(--ink);text-align:left;width:100%}
+.ctx button:hover{background:var(--panel2)}.ctx button:disabled{opacity:.45;cursor:not-allowed}.ctx button .ic{width:18px;height:18px}.ctx button small{margin-left:auto;font:600 10.5px var(--f-mono);color:var(--muted)}
+.world .tip{position:absolute;z-index:5;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:9px 11px;min-width:200px;max-width:260px;font-size:12.5px;pointer-events:auto}
+.tip h4{margin:0 0 3px;font:600 14px var(--f-display)}.tip .st{color:var(--muted);font-weight:600}.tip .meter{margin-top:6px}
+.tip .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.meter{height:7px;background:#e6edf9;border-radius:4px;overflow:hidden}.meter i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.world .legend{position:absolute;right:10px;top:8px;z-index:3;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:11.5px;box-shadow:var(--shadow)}
+.legend div{display:flex;align-items:center;gap:6px;margin:2px 0}.legend i{width:16px;height:4px;border-radius:2px}
+.world .hint{position:absolute;left:50%;transform:translateX(-50%);top:10px;z-index:3;max-width:420px;background:rgba(39,51,77,.9);color:#fff;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:600;transition:opacity .3s}
+.world .hint.warn{background:rgba(217,83,79,.92)}
+/* WIP board on the map */
+.world .wipbar{position:absolute;left:10px;top:8px;z-index:3;background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:5px;display:flex;flex-direction:column;max-height:calc(100% - 16px);overflow:auto;scrollbar-width:thin;backdrop-filter:blur(4px)}
+.wipbar .sb-h{display:flex;align-items:center;gap:5px;padding:2px 5px 3px;font:700 10px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap}
+.wipbar .sb-h i{font-style:normal;font-size:11px;transition:transform .15s;display:inline-block}.wipbar.collapsed .sb-h i{transform:rotate(-90deg)}.wipbar.collapsed .sb-body{display:none}
+.wipbar .sb-body{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+.wipbar .si{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:6px;align-items:center;padding:2px 5px;border-radius:6px;font:600 11px var(--f-body);cursor:default;white-space:nowrap}
+.wipbar .si .ic{width:20px;height:20px}.wipbar .si b{font-family:var(--f-mono);font-size:12px;min-width:16px;text-align:right}.wipbar .si.zero{opacity:.45}.wipbar .si.hot b{color:var(--bad)}.wipbar .si:hover{background:var(--panel2)}
+.wipbar hr{border:0;border-top:1px solid var(--line);margin:3px 2px}
+.world .sbtip{position:absolute;z-index:6;background:#27334d;color:#fff;font:600 11px var(--f-body);padding:5px 9px;border-radius:8px;white-space:nowrap;pointer-events:none;box-shadow:var(--shadow)}
+.world .sbtip small{display:block;font-weight:600;opacity:.8}
+/* side panel */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs .btn{padding:5px 12px;font-size:13px}
+.pal{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pal h3{grid-column:1/-1;margin:6px 0 -2px;font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tool{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--line);border-radius:11px;background:#fff;cursor:pointer;text-align:left;color:var(--ink)}
+.tool.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,108,240,.15)}.tool:disabled{opacity:.5;cursor:not-allowed}
+.tool .ic{width:24px;height:24px;flex:none}.tool b{display:block;font-size:13px}.tool small{font:600 11px var(--f-mono);color:var(--muted)}
+.note{background:var(--panel2);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--muted);margin-top:10px}.note b{color:var(--ink)}
+.crew{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.wk{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.wk .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 13px var(--f-display)}
+.wk b{font-size:13.5px}.wk small{display:block;color:var(--muted);font-size:11.5px}.wk .meter{margin-top:4px}
+.ups{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.up{border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:#fff}.up.owned{background:#eefaf5;border-color:#bfe6d6}.up.locked{opacity:.75}
+.up .uph{display:flex;align-items:center;gap:8px;margin-bottom:3px}.up .ph{font:700 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--panel2);border-radius:6px;padding:2px 6px}
+.up b{font-size:13.5px}.up p{margin:0 0 6px;font-size:12.5px;color:var(--muted)}.up .evid{font-size:11.5px;color:var(--accent);font-weight:700;margin:2px 0 6px}
+.budgetbox{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px}
+.budgetbox>div{display:flex;justify-content:space-between;align-items:baseline}.budgetbox b{font-family:var(--f-mono);font-size:16px}.budgetbox p{margin:6px 0 0;color:var(--muted);line-height:1.4}
+.kicker{font:700 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+header.ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}header.ph h2{margin:0;font:600 18px var(--f-display)}
+/* applications panel */
+.apps{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+.app{flex:0 0 200px;border:1px solid var(--line);border-radius:12px;padding:9px 11px;background:#fff;font-size:12.5px}
+.app.late{border-color:#f0c2c0;background:#fff5f4}.app .nm{font-weight:800;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.app .stg{color:var(--muted);font-weight:600;margin-top:3px}.app .meter{margin-top:7px}.app .meter i{background:var(--good)}.app.late .meter i{background:var(--bad)}
+.app .due{font:700 11px var(--f-mono);color:var(--muted);margin-top:4px}.app .ic{width:18px;height:18px;flex:none}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;user-select:none;margin-left:auto}
+.switch input{appearance:none;width:30px;height:17px;border-radius:9px;background:#cfd9ec;position:relative;cursor:pointer;transition:background .15s;margin:0}
+.switch input::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked{background:var(--accent)}.switch input:checked::after{left:15px}
+.log{margin-top:8px;max-height:150px;overflow:auto;font-size:12px;display:flex;flex-direction:column;gap:3px}
+.log div{padding:4px 8px;border-radius:7px;background:var(--panel2)}.log div.good{background:#eefaf5}.log div.bad{background:#fff1f0}
+/* modals */
+.modal{position:fixed;inset:0;background:rgba(39,51,77,.45);display:grid;place-items:center;z-index:50;padding:20px;overflow:auto}
+.modal .box{background:var(--panel);border-radius:18px;max-width:1120px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 40px);overflow:auto}
+.box h2{font:600 26px var(--f-display);margin:0}.box .lead{font-size:14.5px;margin:0}.box .fine{font-size:12.5px;color:var(--muted);margin:0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;list-style:none;padding:0;margin:0}
+.steps li{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--muted)}
+.steps li b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
+.dmaic{display:flex;gap:6px;flex-wrap:wrap}.dmaic span{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:#fff}.dmaic b{color:var(--accent)}
+.pick{font-family:var(--f-display);font-size:16px;font-weight:600;margin:4px 0 0}
+.scen{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.scard{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:12px 13px;cursor:pointer;font:inherit;color:var(--ink);transition:.12s}
+.scard:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+.scard>b{font-family:var(--f-display);font-size:17px;font-weight:600;line-height:1.15}.scard .blurb{font-size:12.5px;color:var(--muted);line-height:1.4}
+.scard .goal{font-size:12px;line-height:1.4;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 8px}.scard .goal b{color:var(--accent)}.scard .go{margin-top:auto;font-weight:700;font-size:12.5px;color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.kpi{background:var(--panel2);border-radius:11px;padding:9px 11px}.kpi .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}.kpi b{font:700 20px var(--f-mono);display:block}.kpi small{color:var(--muted);font-size:11px}
+.goalbox{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.goalbox.met{border-color:#3fa894;background:#eefaf5}.goalbox .gl{display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:center}.goalbox .gl b{font-family:var(--f-mono)}.goalbox .gl.gok b{color:#2f8f7c}.goalbox .gl.gno b{color:var(--bad)}
+.flag{font:700 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;border:1.5px solid;border-radius:999px;padding:2px 9px}.flag.g{color:#2f8f7c;border-color:#2f8f7c}.flag.i{color:var(--muted);border-color:var(--muted2)}
+.seg{display:inline-flex}.seg .btn{border-radius:0;margin-left:-1.5px}.seg .btn:first-child{border-radius:999px 0 0 999px;margin-left:0}.seg .btn:last-child{border-radius:0 999px 999px 0}
+.mapq{background:var(--panel2);border:1.5px dashed var(--accent);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}.mapq b{font-size:16px}.mapq small{color:var(--muted)}.mapq.done{border-style:solid;border-color:var(--good)}
+.mapview{flex:none;min-height:180px}
+.bd{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;padding:6px 0}.bdb{flex:1 1 120px;max-width:170px;min-height:118px;border:2px dashed var(--muted2);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px;background:var(--panel);position:relative}.bdb.on{border:2px solid var(--accent);background:#fff}.bdb.opt.on{border-style:dashed}.bdb.nx{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,108,240,.15)}.bdb b{font-size:13.5px;line-height:1.25}.bdb small{color:var(--muted);font-size:11.5px}.bdb .bdd{margin-top:auto;font-family:var(--f-mono);font-size:11px}.bdb .q,.sc .q{font:700 26px var(--f-display);color:var(--muted2);margin:auto}
+.bdn{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font:700 12px var(--f-body)}.bdar{align-self:center;font-size:20px;color:var(--muted2)}.bdar.on{color:var(--ink)}
+.sipoc{table-layout:fixed;width:100%}.sipoc th{text-align:center!important}.sipoc td{vertical-align:top;padding:8px!important;border:1px solid var(--line)}.sipoc td{white-space:normal!important;overflow-wrap:anywhere}.sipoc .sp{background:var(--panel2);text-align:left!important}.sipoc .sp b{display:block;font-size:13px;margin:4px 0 2px}.sipoc .sp small{color:var(--muted)}.sc{text-align:center}.sc.nx{outline:2px dashed var(--accent);outline-offset:-4px}.sc.on{text-align:left}.si{background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 7px;margin-bottom:5px;font-size:12.5px;font-weight:600}.si.ch{border-color:var(--accent);background:#eef3ff}.si small{display:block;font-weight:600;font-size:10.5px;color:var(--muted)}
+.swim{width:100%;height:auto;flex:none;display:block}
+.ptc{width:100%;height:auto;flex:none;display:block;margin:6px 0 4px}.ptsum{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;align-items:center}.ptsum .sep{padding-left:12px;border-left:1px solid var(--line)}.ptsum .key{margin-left:auto;color:var(--muted);font-size:12px}.ptsum i{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 10px;vertical-align:0}.ptsum .d1{background:var(--accent)}.ptsum .d2{background:#e05252}.ptsum .d3{border:2px solid #e08a1b;width:6px;height:6px}.ptd summary{cursor:pointer;font-weight:700;margin:6px 0}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:800px){.twocol{grid-template-columns:1fr}}
+.tblwrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}td.l{white-space:normal;min-width:90px}th{font:700 10.5px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}th.l,td.l{text-align:left}
+.roi th small{display:block;font:600 10px var(--f-body);color:var(--muted);text-transform:none;letter-spacing:0}
+.roi-sum{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;margin-top:8px;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
+.roi-sum .warn{color:var(--bad);font-weight:700;flex-basis:100%}.roi-sum .good{color:#2f8f7c;font-weight:700;flex-basis:100%}
+.implog{font-size:12px;margin-top:6px}.implog summary{cursor:pointer;color:var(--muted);font-weight:700}.implog ul{margin:4px 0 0 16px;color:var(--muted)}
+.coach{background:var(--panel2);border-radius:12px;padding:10px 12px;font-size:13px}.coach p{margin:0 0 6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.sxtabs{display:flex;gap:6px;flex-wrap:wrap}.sxgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.sxgrid{grid-template-columns:1fr}}
+.sxgrid h3,.box h3{font:600 15px var(--f-display);margin:0 0 6px}
+svg.chart{width:100%;height:auto;display:block}
+.pareto .bar{fill:var(--accent)}.pareto .bar.vital{fill:#d9534f}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card hud">
+  <div class="brand"><h1>Permit Office</h1><span>Cut the approval cycle time</span></div>
+  <div class="stats">
+    <div class="stat"><span class="lbl">Shift</span><b id="hShift">1</b></div>
+    <div class="stat"><span class="lbl">Shift time</span><b id="hTime">0:00</b></div>
+    <div class="stat" title="Average time from a complete request being received to the signed permit going to the applicant"><span class="lbl">Cycle time mean / median</span><b id="hCycle">–</b></div>
+    <div class="stat" title="Average cycle time before your first change"><span class="lbl">Baseline</span><b id="hBase">–</b></div>
+    <div class="stat"><span class="lbl">Permits issued</span><b id="hIssued">0</b></div>
+    <div class="stat"><span class="lbl">Outside standard</span><b id="hLate">0</b></div>
+    <div class="stat" title="Staff time spent on work that was later rejected or redone"><span class="lbl">Rework time</span><b id="hRework">0:00</b></div>
+    <div class="stat"><span class="lbl">Defects</span><b id="hDef">0</b></div>
+    <div class="stat" title="Everything spent on changes so far"><span class="lbl">Spent</span><b id="hSpent">0</b></div>
+    <div class="stat" title="Value of the cycle time removed, minus what you spent"><span class="lbl">Score</span><b id="hScore">–</b></div>
+  </div>
+  <div class="toolbar">
+    <button class="btn" id="bData" type="button">Process data</button>
+    <button class="btn primary" id="bSnap" type="button" title="Save everything measured so far as one Excel workbook">Download data now</button>
+    <button class="btn" id="bVoc" type="button">Voice of the customer</button>
+    <button class="btn" id="bPaths" type="button" aria-pressed="false">Walking paths</button>
+    <button class="btn" id="bRot" type="button" title="Rotate the view a quarter turn (R)">Rotate &#8635;</button>
+    <button class="btn" id="bPause" type="button">Pause</button>
+    <button class="btn" id="bEnd" type="button">End shift &amp; review</button>
+    <div class="seg" id="speeds" role="group" aria-label="Game speed"><button class="btn on" type="button" data-speed="1">1&times;</button><button class="btn" type="button" data-speed="2">2&times;</button><button class="btn" type="button" data-speed="5">5&times;</button><button class="btn" type="button" data-speed="10">10&times;</button></div>
+    <button class="btn on" id="bMusic" type="button" aria-pressed="true">&#9834; Music</button>
+    <button class="btn on" id="bSfx" type="button" aria-pressed="true">&#9835; Sounds</button>
+  </div>
+</div>
+<div class="game">
+  <div class="stage">
+    <div class="world"><canvas id="cv" tabindex="0" aria-label="Permit office floor plan"></canvas>
+      <div class="wipbar" id="wip" aria-label="Files in progress"></div><div class="sbtip" id="sbtip" hidden></div>
+      <button class="paneltab" id="bShow" type="button" hidden title="Show the tool panel (T)">&#8249; Tools</button>
+      <div class="legend" id="legend" hidden></div>
+      <div class="fly" id="fly" hidden></div>
+      <div class="dock" id="dock"></div>
+      <div class="ctx" id="ctx" hidden></div>
+      <div class="tip" id="tip" hidden></div>
+      <div class="hint" id="hint" hidden></div>
+    </div>
+    <div class="card" id="appsCard">
+      <header class="ph"><h2>Applications</h2><span class="kicker">Signed permits go to the applicant automatically · each must be signed off before its service standard runs out · the clock starts when a complete request is received and pauses while an application is back with the applicant</span><label class="switch" title="Show every file in the building, not only those waiting"><input type="checkbox" id="showAll"> Show all files</label></header>
+      <div class="apps" id="apps"></div>
+      <div class="kicker" style="margin-top:10px">Office log</div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+  <aside class="side">
+    <button class="btn small sidehide" id="bHide" type="button" title="Hide the tool panel so the map fills the window (T)">Hide panel &#8250;</button>
+    <section class="card" id="inspect" hidden></section>
+    <section class="card">
+      <div class="tabs"><button class="btn on" data-tab="build" type="button">Build</button><button class="btn" data-tab="crew" type="button">Crew</button><button class="btn" data-tab="improve" type="button">Root causes</button></div>
+      <div id="pBuild"></div><div id="pCrew" hidden></div><div id="pImprove" hidden></div>
+    </section>
+  </aside>
+</div>
+</div>
+<div class="modal" id="modal" hidden><div class="box" id="modalBody"></div></div>
+<div class="modal" id="stats" hidden><div class="box" id="statsBody"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function gauss(){var u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+var rint=function(a,b){return a+Math.floor(Math.random()*(b-a+1))},clamp=function(v,a,b){return Math.min(b,Math.max(a,v))};
+var fmtT=function(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')},fx=function(v,d){return Number(v).toFixed(d==null?1:d)},pct=function(v){return Math.round(v*100)+'%'},p1=function(v){return (v*100).toFixed(1)+'%'};
+function lcg(seed){var s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+
+/* ---------- icons (SVG symbols reused in the DOM and on the canvas) ---------- */
+var ICONS={
+ file:'<path d="M9 4h9l5 5v19H9z" fill="#ffe9a8" stroke="#8a7a52" stroke-width="1.5"/><path d="M18 4v5h5" fill="none" stroke="#8a7a52" stroke-width="1.5"/><path d="M12 14h8M12 18h8M12 22h5" stroke="#8a7a52" stroke-width="1.5" stroke-linecap="round"/>',
+ folder:'<path d="M4 9h9l2 3h13v14H4z" fill="#8fc7ff" stroke="#3b6cf0" stroke-width="1.5"/><path d="M4 14h24" stroke="#3b6cf0" stroke-width="1.5"/>',
+ permit:'<path d="M7 5h18v22H7z" fill="#fff" stroke="#2f9e7a" stroke-width="1.5"/><circle cx="16" cy="18" r="4.5" fill="#bfe6d6" stroke="#2f9e7a" stroke-width="1.5"/><path d="M10 9h12M10 12h8" stroke="#2f9e7a" stroke-width="1.5" stroke-linecap="round"/>',
+ wait:'<circle cx="16" cy="16" r="11" fill="#fff" stroke="#e0a21b" stroke-width="2"/><path d="M16 9v7l5 3" stroke="#e0a21b" stroke-width="2.2" stroke-linecap="round" fill="none"/>',
+ person:'<circle cx="16" cy="10" r="5" fill="#ffd9b8" stroke="#8a6b5a" stroke-width="1.4"/><path d="M7 28c0-6 4-9 9-9s9 3 9 9z" fill="#8fc7ff" stroke="#3b6cf0" stroke-width="1.4"/>',
+ desk:'<rect x="4" y="12" width="24" height="5" rx="1.5" fill="#d9b48f" stroke="#8a6b5a" stroke-width="1.4"/><path d="M7 17v9M25 17v9" stroke="#8a6b5a" stroke-width="2"/><rect x="11" y="5" width="10" height="7" rx="1.5" fill="#bfe3ff" stroke="#3b6cf0" stroke-width="1.4"/>',
+ counter:'<rect x="3" y="11" width="26" height="8" rx="2" fill="#8fc7ff" stroke="#3b6cf0" stroke-width="1.4"/><path d="M6 19v8M26 19v8" stroke="#3b6cf0" stroke-width="2"/><path d="M9 7h14" stroke="#3b6cf0" stroke-width="2.5" stroke-linecap="round"/>',
+ review:'<rect x="6" y="5" width="20" height="22" rx="2" fill="#fff" stroke="#6c5ce7" stroke-width="1.5"/><path d="M10 11h12M10 15h12M10 19h7" stroke="#6c5ce7" stroke-width="1.5" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#dcd6ff" stroke="#6c5ce7" stroke-width="1.4"/>',
+ eng:'<path d="M16 4l11 19H5z" fill="#ffe9a8" stroke="#c98a1a" stroke-width="1.5"/><path d="M16 11v7M16 20v1" stroke="#c98a1a" stroke-width="2" stroke-linecap="round"/><path d="M8 27h16" stroke="#c98a1a" stroke-width="2" stroke-linecap="round"/>',
+ cash:'<rect x="4" y="9" width="24" height="15" rx="2.5" fill="#bfe6d6" stroke="#2f9e7a" stroke-width="1.5"/><circle cx="16" cy="16.5" r="4" fill="#fff" stroke="#2f9e7a" stroke-width="1.5"/>',
+ stamp:'<rect x="6" y="20" width="20" height="6" rx="1.5" fill="#d9534f" stroke="#8a2a28" stroke-width="1.4"/><path d="M12 20v-5a4 4 0 018 0v5" fill="#f3a3a0" stroke="#8a2a28" stroke-width="1.4"/><path d="M16 11V6" stroke="#8a2a28" stroke-width="2.5" stroke-linecap="round"/>',
+ copier:'<rect x="4" y="12" width="24" height="12" rx="2" fill="#dfe6f0" stroke="#55627a" stroke-width="1.5"/><rect x="9" y="6" width="14" height="6" rx="1" fill="#fff" stroke="#55627a" stroke-width="1.5"/><rect x="7" y="16" width="8" height="4" rx="1" fill="#2f9e7a"/>',
+ cabinet:'<rect x="7" y="4" width="18" height="24" rx="1.5" fill="#a9b7cc" stroke="#55627a" stroke-width="1.5"/><path d="M7 12h18M7 20h18" stroke="#55627a" stroke-width="1.5"/><path d="M14 8h4M14 16h4M14 24h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
+ meeting:'<ellipse cx="16" cy="16" rx="11" ry="6" fill="#d9b48f" stroke="#8a6b5a" stroke-width="1.5"/><circle cx="16" cy="6" r="2.5" fill="#8fc7ff"/><circle cx="16" cy="26" r="2.5" fill="#8fc7ff"/><circle cx="4" cy="16" r="2.5" fill="#8fc7ff"/><circle cx="28" cy="16" r="2.5" fill="#8fc7ff"/>',
+ coffee:'<path d="M7 10h15v9a6 6 0 01-6 6h-3a6 6 0 01-6-6z" fill="#fff" stroke="#8a6b5a" stroke-width="1.5"/><path d="M22 12h3a3 3 0 010 6h-3" fill="none" stroke="#8a6b5a" stroke-width="1.5"/><path d="M11 4c0 2 2 2 2 4M16 4c0 2 2 2 2 4" stroke="#8a6b5a" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+ plant:'<path d="M10 20h12l-2 8h-8z" fill="#d9a07a" stroke="#8a6b5a" stroke-width="1.4"/><path d="M16 20c-6-2-8-8-6-12 4 1 6 6 6 12zm0 0c6-2 8-8 6-12-4 1-6 6-6 12z" fill="#7fd1a1" stroke="#2f9e7a" stroke-width="1.3"/>',
+ hall:'<path d="M3 20l13-9 13 9-13 9z" fill="#eef2f8" stroke="#aab7cc" stroke-width="1.3"/><path d="M9 20l7-5 7 5-7 5z" fill="#fff" stroke="#aab7cc" stroke-width="1"/>',
+ door:'<rect x="8" y="4" width="16" height="24" rx="1.5" fill="#8fc7ff" stroke="#3b6cf0" stroke-width="1.5"/><circle cx="20" cy="17" r="1.6" fill="#27334d"/>',
+ bulldoze:'<path d="M8 8l16 16M24 8L8 24" stroke="#d9534f" stroke-width="3.5" stroke-linecap="round"/>',
+ select:'<path d="M9 5l14 11-6 1 4 7-3 1.5-4-7-5 4z" fill="#fff" stroke="#27334d" stroke-width="1.5" stroke-linejoin="round"/>',
+ alarm:'<circle cx="16" cy="16" r="11" fill="#d9534f"/><path d="M16 9v8M16 21v1" stroke="#fff" stroke-width="3" stroke-linecap="round"/>',
+ phone:'<path d="M9 6h5l2 5-3 2a12 12 0 006 6l2-3 5 2v5a2 2 0 01-2 2A17 17 0 017 8a2 2 0 012-2z" fill="#ffe9a8" stroke="#8a7a52" stroke-width="1.5"/>',
+ mail:'<rect x="4" y="8" width="24" height="17" rx="2" fill="#fff" stroke="#8a7a52" stroke-width="1.5"/><path d="M4 10l12 9 12-9" fill="none" stroke="#8a7a52" stroke-width="1.5"/>',
+ laptop:'<rect x="7" y="7" width="18" height="13" rx="1.5" fill="#bfe3ff" stroke="#3b6cf0" stroke-width="1.5"/><path d="M4 23h24l-2 3H6z" fill="#dfe6f0" stroke="#55627a" stroke-width="1.3"/>',
+ building:'<rect x="7" y="5" width="18" height="23" rx="1.5" fill="#dcd6ff" stroke="#6c5ce7" stroke-width="1.5"/><path d="M11 10h3M18 10h3M11 15h3M18 15h3M11 20h3M18 20h3" stroke="#6c5ce7" stroke-width="1.8" stroke-linecap="round"/><rect x="13.5" y="23" width="5" height="5" fill="#6c5ce7"/>',
+ wall:'<rect x="4" y="8" width="24" height="16" fill="#dfe6f0" stroke="#55627a" stroke-width="1.5"/><path d="M4 13h24M4 19h24M12 8v5M20 13v6M10 19v5" stroke="#55627a" stroke-width="1.2"/>',
+ concrete:'<rect x="4" y="6" width="24" height="20" fill="#9aa6b8" stroke="#4a5570" stroke-width="1.5"/><path d="M8 11h3M17 12h4M11 19h4M20 20h3" stroke="#6b7a96" stroke-width="1.4" stroke-linecap="round"/>'
+};
+var defs=$('#defs');for(var k in ICONS){var sym=document.createElementNS('http://www.w3.org/2000/svg','symbol');sym.setAttribute('id','i-'+k);sym.setAttribute('viewBox','0 0 32 32');sym.innerHTML=ICONS[k];defs.appendChild(sym)}
+function ic(k,cls){return '<svg class="ic '+(cls||'')+'"><use href="#i-'+k+'"/></svg>'}
+var IMG={};function iconImg(k){if(IMG[k])return IMG[k];var im=new Image();im.src='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'+ICONS[k]+'</svg>');IMG[k]=im;return im}
+function icon(k,x,y,s){var im=iconImg(k);if(im.complete&&im.naturalWidth)ctx.drawImage(im,x-s/2,y-s/2,s,s)}
+
+/* ---------- the office ---------- */
+var N=14,TW=64,TH=32,CW=936,CH=14*TW/2+122,ORX=CW/2,ORY=58;
+var WAGE_PER_MIN=5,FEE=45,SLA_BASE=180,SLA_VAR=30,ABANDON=2.0,WALKOUT=80,TRAY=6,BATCH=4,BATCH_WAIT=45,MEET_EVERY=150,MEET_LEN=30,COACH_COST=8,COACH_TIME=3,TRAIN_COST=[30,50],OVERDRAFT=200,R3_MIN=5,CALLBACK=40,SEARCH_T=40,COPY_T=2.5,BREAK_EVERY=110,BREAK_LEN=6;
+/* What each desk does. 'cause' is the defect it can create; 'ctq' stations are measured like a machine and drift. */
+var BT={
+ hall:{name:'Clear aisle',cost:5,cat:'Layout',icon:'hall',desc:'A kept-clear corridor. Staff walk twice as fast along aisles and route through them when it is quicker. Desks must sit beside an aisle.'},
+ plant:{name:'Planter',cost:10,cat:'Layout',icon:'plant',block:true,desc:'A big potted plant. Nobody walks through it; it is here so you can see how obstacles bend the routes.'},
+ partition:{name:'Partition wall',cost:20,cat:'Layout',icon:'wall',block:true,desc:'A movable office partition. Nobody walks through it, so it decides who has to walk round what. It can be taken down (10 coins back) and put up somewhere else. The solid concrete walls of the building cannot be moved.'},
+ intake:{name:'Intake counter',cost:120,cat:'Desks',road:true,worker:'clerk',icon:'counter',step:'intake',work:6,cause:'Incomplete application accepted',desc:'Staffed by a clerk. Applicants queue here; the clerk checks the application, opens a paper file and (unless forms are online) walks it to the copier before it goes to Records. A clerk in a hurry can accept an incomplete application, which is only found out at review.'},
+ records:{name:'Records desk',cost:100,cat:'Desks',road:true,worker:'clerk',icon:'cabinet',step:'records',work:4,cause:'Mis-filed',desc:'Staffed by a clerk who logs each file into the register and sends it on to plan review. A file can be mis-filed, and then it is lost in the file room until someone finds it.'},
+ review:{name:'Plan review desk',cost:160,cat:'Desks',road:true,worker:'planner',icon:'review',step:'review',work:10,ctq:true,cause:'Review error',over:'Gold-plated review',desc:'Staffed by a planner who checks the application against the zoning rules. Review quality is measured on every file: it drifts as the planner tires. A review that misses something is sent back to be redone; one that goes far beyond the standard is over-processing and costs extra time.'},
+ eng:{name:'Engineering desk',cost:180,cat:'Desks',road:true,worker:'engineer',icon:'eng',step:'eng',work:12,ctq:true,cause:'Calculation error',over:'Over-engineered review',desc:'Staffed by an engineer. About half of all applications need a structural check. Quality is measured per file and drifts; errors are reworked.'},
+ cashier:{name:'Cashier window',cost:100,cat:'Desks',road:true,worker:'clerk',icon:'cash',step:'cashier',work:4,cause:'Fee miscalculated',desc:'Staffed by a clerk who works out and collects the fee. A miscalculated fee has to be redone and refunded.'},
+ signoff:{name:"Supervisor's office",cost:200,cat:'Desks',road:true,worker:'supervisor',icon:'stamp',step:'signoff',work:2,cause:'Unsigned page',desc:'The supervisor signs every permit. Signatures are done in batches of '+BATCH+' (or after '+BATCH_WAIT+' seconds), and the supervisor leaves for a '+MEET_LEN+'-second meeting every '+Math.round(MEET_EVERY/60*10)/10+' minutes. Files wait.'},
+ issue:{name:'Issuing counter',cost:100,cat:null,road:true,worker:'clerk',icon:'permit',step:'issue',work:3,desc:'Staffed by a clerk who hands the permit to the applicant and collects the '+FEE+'-coin fee. A permit issued after its service standard is late, and the fee is halved. Finished files are carried to the file room.'},
+ copier:{name:'Copier',cost:80,cat:'Equipment',icon:'copier',desc:'Every paper file is copied here after intake. One clerk at a time; the others queue. Online forms remove the trip entirely.'},
+ fileroom:{name:'File room',cost:90,cat:'Equipment',icon:'cabinet',desc:'Where closed files are archived and where mis-filed files end up. The further it is from Records and Issuing, the more walking, and the longer a lost file takes to find.'},
+ mailroom:{name:'Mail room',cost:70,cat:'Equipment',icon:'mail',desc:'Post arrives here in bundles every few minutes. An intake clerk has to walk over, fetch the bundle and open each application at the counter. Without a mail room the courier drops the post at the intake counter.'},
+ meeting:{name:'Meeting room',cost:150,cat:'Equipment',icon:'meeting',desc:'Where the supervisor’s meetings happen. If there is none, meetings happen in the supervisor’s office. Far away means a long walk each time.'},
+ coffee:{name:'Coffee station',cost:60,cat:'Equipment',icon:'coffee',desc:'Staff take a short break here every couple of minutes. Without one, nobody takes breaks, but a long walk to coffee is motion waste you can see on the walking paths view.'},
+ door:{name:'Public entrance',cost:0,icon:'door',desc:'Applicants arrive here and wait to be served at an intake counter. Someone who waits more than '+WALKOUT+' seconds walks out. It cannot be moved.'}
+};
+var CATS=['Layout','Desks','Equipment'];
+var STEPS=['intake','copy','records','review','eng','cashier','signoff'];
+var STEP_LABEL={intake:'Intake',copy:'Copying',records:'Records',review:'Plan review',eng:'Engineering',cashier:'Cashier',signoff:'Sign-off',issue:'Issuing',callback:'Waiting on applicant',lost:'Lost in the file room',queue:'Waiting at the door',mail:'In the post',online:'Online, to print'};
+var STEP_ICON={queue:'person',intake:'counter',copy:'copier',records:'cabinet',review:'review',eng:'eng',cashier:'cash',signoff:'stamp',issue:'permit',callback:'phone',lost:'cabinet',mail:'mail',online:'laptop'};
+/* Where applications come from. Each source has its own channel into the office, its own mix of projects and its own service standard. */
+var SOURCES={
+ walkin:{name:'Walk-in',who:'Homeowners',icon:'person',sla:180,inc:.18,eng:.3,kinds:['Deck','Fence','Garage','Basement suite','Hot tub','Shed','Carport','Solar panels']},
+ online:{name:'Online portal',who:'Contractors',icon:'laptop',sla:180,inc:.12,eng:.6,kinds:['Home addition','Shop fit-out','Sign','Patio','Duplex','Restaurant kitchen']},
+ mail:{name:'Mail',who:'Businesses',icon:'mail',sla:240,inc:.3,eng:.7,kinds:['Highway access','Environmental licence','Child-care licence','Warehouse','Drainage','Liquor licence']},
+ internal:{name:'Other departments',who:'Ministries',icon:'building',sla:300,inc:.08,eng:1,kinds:['Capital funding request','Community grant','School portable','Park washroom','Clinic renovation']}
+};
+var SRC_ORDER=['walkin','online','mail','internal'];
+var ROLES={clerk:{name:'Clerk',plural:'Clerks',col:'#3b6cf0',hat:'#8fc7ff'},planner:{name:'Planner',plural:'Planners',col:'#6c5ce7',hat:'#dcd6ff'},engineer:{name:'Engineer',plural:'Engineers',col:'#e0a21b',hat:'#ffe9a8'},supervisor:{name:'Supervisor',plural:'Supervisors',col:'#2f9e7a',hat:'#bfe6d6'}};
+var ROLE_ORDER=['clerk','planner','engineer','supervisor'];
+var SKILL=['Trainee','Trained','Expert'],WALK=[.9,1,1.1],TASKM=[1.25,1,.85],ERRM=[1.6,1,.5],SDM=[1.4,1,.75];
+var CTQ={review:{name:'Review score',target:90,sd:2.4,tol:7,dec:1},eng:{name:'Check score',target:90,sd:2.6,tol:7,dec:1}};
+var P={incomplete:.18,misfile:.08,fee:.07,unsigned:.03};
+var ADVICE={
+ 'Incomplete application accepted':'Intake accepted applications with missing documents, which only came to light at plan review and had to go back to the applicant. An intake checklist (standard work) or online forms that refuse incomplete submissions stop this at the source.',
+ 'Mis-filed':'Records put files in the wrong place and they were lost until found. 5S the file room, add an electronic file tracker, train the records clerk, or move the file room closer so filing is not rushed.',
+ 'Review error':'Planners missed things and files had to be re-reviewed. Look at the review control chart: a drifting mean is fatigue, so coach sooner or buy the daily huddle; a wide spread is method, so buy review standard work or train the planner.',
+ 'Gold-plated review':'Planners went far beyond the standard on some files: over-processing that adds time and no value. Review standard work narrows the spread.',
+ 'Calculation error':'Engineering checks were wrong and redone. Same remedies as review errors: coaching, huddles, standard work and training.',
+ 'Over-engineered review':'Engineers over-checked some files. Standard work narrows the spread.',
+ 'Fee miscalculated':'Cashiers got the fee wrong and had to redo it and refund. The fee calculator (poka-yoke) all but removes this; training helps.',
+ 'Unsigned page':'The supervisor missed a signature in a batch and the file came back. Delegated sign-off cuts the batching that causes it.',
+ 'Outside service standard':'The approval cycle time ran past the service standard. Find the queue that grew: an in-tray that stayed full, a supervisor batch, a copier line, or files lost in the file room. Fix the constraint, not the symptom.',
+ 'Abandoned application':'Applicants gave up waiting. These are lost fees on top of permits outside their standard, and the cure is the same: a shorter cycle time.',
+ 'Walked out':'Applicants left the queue at the door before being served. Add an intake counter, cross-train clerks to help at intake, or level the arrivals with appointment scheduling.'
+};
+var SRC_NOTE='Walk-ins queue at the door. Online submissions land in the intake in-tray and have to be printed at the copier (online forms send them straight to Records). Post arrives in bundles at the mail room and a clerk has to fetch it; mailed applications are the most often incomplete. Other departments send their requests straight to Records, every one needs engineering, and they get a longer service standard.';
+var UPS=[
+ {id:'checklist',name:'Intake checklist (standard work)',phase:'Improve',cost:80,desc:'Incomplete applications are caught at the counter instead of at review. Incomplete acceptances drop from '+Math.round(P.incomplete*100)+'% to 5%.'},
+ {id:'eforms',name:'Online application forms',phase:'Improve',cost:120,desc:'Applications arrive already typed and complete. No copier trip after intake, and incomplete acceptances drop to 8%.'},
+ {id:'fives',name:'5S file room',phase:'Improve',cost:70,desc:'Labelled shelves and a place for everything. Mis-filing drops from '+Math.round(P.misfile*100)+'% to 2%, and a lost file is found in a third of the time.'},
+ {id:'tracker',name:'Electronic file tracker',phase:'Improve',cost:90,desc:'Every file is barcoded. A mis-filed file is found in 10 seconds instead of '+SEARCH_T+'.'},
+ {id:'feecalc',name:'Fee calculator (poka-yoke)',phase:'Improve',cost:60,desc:'The cashier cannot enter a wrong fee. Fee errors drop from '+Math.round(P.fee*100)+'% to 1%.'},
+ {id:'delegate',name:'Delegated sign-off',phase:'Improve',cost:90,desc:'Routine permits are signed one at a time as they arrive, instead of waiting for a batch of '+BATCH+'. Unsigned pages all but disappear.'},
+ {id:'meetfree',name:'Meeting-free mornings',phase:'Improve',cost:60,desc:'The supervisor is pulled into half as many meetings.'},
+ {id:'huddle',name:'Daily huddle and visual board',phase:'Control',cost:100,desc:'Planners and engineers drift about 60% slower, so their scores stay centred longer.'},
+ {id:'stdrev',name:'Review standard work',phase:'Improve',cost:110,desc:'A written review method cuts score variation by about a third at the review and engineering desks.'},
+ {id:'alarms',name:'Control plan alarms',phase:'Control',cost:60,desc:'A desk raises an alarm when a score leaves spec or five scores trend one way. Expert reviewers then reset themselves.'},
+ {id:'appt',name:'Appointment scheduling (heijunka)',phase:'Improve',cost:80,desc:'Applicants arrive at even intervals instead of in bursts, so the queue at the door stays short.'},
+ {id:'crosstrain',name:'Cross-training',phase:'Improve',cost:100,desc:'An idle clerk helps at any clerk desk with a full in-tray or a queue at the door.'},
+ {id:'newsys',name:'New permitting software',phase:'Improve',cost:400,desc:'Replace the old permit system with a modern one that has faster screens and better reports.'},
+ {id:'morale',name:'Motivation workshop',phase:'Improve',cost:120,desc:'A half-day team workshop on attitude and ownership.'},
+ {id:'notice',name:'Warning notice for applicants',phase:'Improve',cost:40,desc:'A bold notice on the website and at the counter telling applicants to read the instructions.'},
+ {id:'teams',name:'Specialist teams by permit type',phase:'Improve',cost:200,desc:'Reorganize the office into teams that each handle one family of permits.'},
+ {id:'pcs',name:'New computers',phase:'Improve',cost:250,desc:'Replace every desktop in the office with a faster machine.'},
+ {id:'eflow',name:'Digital workflow',phase:'Improve',cost:250,desc:'Files move between desks electronically: no carrying after intake and no file-room trips. The layout stops mattering for files, though people still walk to the copier, coffee and meetings.'}
+];
+var CTQ_CAUSES=['Review error','Calculation error','Gold-plated review','Over-engineered review'];
+var UP_NEEDS={checklist:{causes:['Incomplete application accepted'],why:'an incomplete application accepted'},eforms:{causes:['Incomplete application accepted'],walk:.4,why:'an incomplete application or time walking above 40%'},fives:{causes:['Mis-filed'],why:'a mis-filed file'},tracker:{causes:['Mis-filed'],why:'a mis-filed file'},feecalc:{causes:['Fee miscalculated'],why:'a miscalculated fee'},delegate:{causes:['Unsigned page','Outside service standard'],why:'an unsigned page or a permit outside its service standard'},meetfree:{causes:['Outside service standard'],why:'a permit outside its service standard'},huddle:{causes:CTQ_CAUSES,why:'a review or calculation error'},stdrev:{causes:CTQ_CAUSES,why:'a review or calculation error, or gold plating'},alarms:{causes:CTQ_CAUSES,why:'a review or calculation error'},appt:{causes:['Walked out'],why:'an applicant walking out'},crosstrain:{causes:['Walked out','Outside service standard'],why:'a walk-out or a permit outside its service standard'},eflow:{walk:.4,why:'time walking above 40%'}};
+var SCEN={
+ asfound:{name:'The office as found',tag:'Cycle time project',coins:0,budget:null,err:1,drift:1,sd:1,demand:.5,sla:1,
+  blurb:'',goal:'Bring the average approval cycle time under 2:00.',hint:'Process data already holds the last 30 minutes of records as shift 0. Watch the office before you change anything.'},
+ lead:{name:'The long corridor',tag:'Lead-time project',coins:250,budget:300,err:.6,drift:.7,sd:.8,demand:1,sla:1,
+  blurb:'Staff are careful and errors are rare, but desks are scattered along one long corridor, the copier and file room are at the far end and nothing is a kept-clear aisle. Files spend their life under someone’s arm.',
+  goal:'Average approval cycle time under 2:00 and time walking under 35% of task time.',hint:'Turn on the walking paths view: the waste here is transport and motion.'},
+ quality:{name:'Rework city',tag:'Defect-reduction project',coins:400,budget:400,err:1.8,drift:1.8,sd:1.4,demand:.9,sla:1,
+  blurb:'A compact office with a dreadful error rate: hurried intake, a chaotic file room, tired reviewers, fee mistakes and signatures missed in big batches. Half the files loop back somewhere.',
+  goal:'Sigma level of 3.0 or better and under 30 seconds of rework time per permit issued.',hint:'Start with the Pareto and the control charts, then buy the improvements that attack the vital few.'},
+ capacity:{name:'Building boom',tag:'Capacity project',coins:400,budget:500,err:1,drift:1,sd:1,demand:2.3,sla:1,
+  blurb:'A tidy, well-run office with aisles, online forms and trained staff. Then applications doubled. Find the constraint and add capacity without breaking what works.',
+  goal:'Issue at least 40 permits per 10 minutes with 85% inside their service standard.',hint:'Look at desk and crew utilization: the desk near 100% is the constraint.'},
+ blank:{name:'Empty floor',tag:'Design project',coins:1200,budget:null,err:1,drift:1,sd:1,demand:1,sla:1,
+  blurb:'Nothing but the public entrance, the concrete core and a short aisle. Design the whole office yourself, then run it.',
+  goal:'Build an office with an average approval cycle time under 2:00 at sigma 3.0 or better.',hint:'Applicants only arrive once there is an intake counter. Every file needs intake, records, plan review, a cashier and sign-off; about half also need engineering. Signed permits go to the applicant automatically.'}
+};
+var SCEN_ORDER=['asfound','lead','quality','capacity','blank'];
+var NAMES=['Amara','Ben','Chloe','Dev','Elin','Farah','Gus','Hana','Ivy','Jonah','Kai','Lena','Mo','Nia','Omar','Priya','Quinn','Rosa','Sam','Tara','Uma','Vik','Wren','Yusuf','Zoe'];
+var ARR={walkin:[40,60],online:[100,140],mail:[220,260],internal:[220,260]};
+
+/* ---------- state ---------- */
+var G=null,inspKey='';
+function fresh(){return {opps:0,def:0,defects:{},copq:0,revenue:0,issued:0,late:0,abandoned:0,walkouts:0,wages:0,ops:0,build:0,arrivals:0,arrSrc:{},leadSum:0,leadN:0,grossSum:0,wasteT:0,appSum:0,reworkN:0,rwFiles:0,walkT:0,workT:0,fullT:0,meetT:0}}
+function newGame(scen){
+  DIST={};
+  var keepShow=!!(G&&G.showAll);scen=SCEN[scen]?scen:'asfound';var sc=SCEN[scen];
+  G={scen:scen,sc:sc,showAll:keepShow,budget:sc.budget==null?null:sc.budget,tranches:0,cum:{min:0,revenue:0,wages:0,ops:0,copq:0,def:0,opps:0,onTime:0,late:0,issued:0,leadSum:0,leadN:0,wasteT:0},imps:[],impSpend:0,
+    shift:1,phase:'intro',paused:false,speed:1,t:0,anim:0,coins:sc.coins,mapVer:1,measLog:[],fileLog:[],defLog:[],errLog:[],dz:[10,25,15,40,60],tiles:[],B:[],bmap:{},bid:1,W:[],wid:1,F:[],fid:1,queue:[],next:{walkin:8,online:30,mail:60,internal:90},up:{},hist:[],log:[],stats:fresh(),
+    tool:'select',sel:null,hover:null,showPaths:false,names:NAMES.slice().sort(function(){return Math.random()-.5}),dirty:{all:true},endArm:0,alarms:{}};
+  var rnd=lcg(7);
+  for(var y=0;y<N;y++){var row=[];for(var x=0;x<N;x++)row.push({k:'floor',b:null,walk:0,v:rnd()});G.tiles.push(row)}
+  /* fixed: planters round the edge and the concrete core (lift shaft and stairs) in the middle, which no project can move */
+  [[0,0],[13,0],[0,13],[13,13],[6,0],[7,13],[13,6],[0,3],[0,11],[13,3],[13,10],[5,13],[9,0]].forEach(function(p){G.tiles[p[1]][p[0]].k='plant'});
+  [[8,5],[9,5],[8,6],[9,6],[8,7],[9,7],[8,8],[9,8]].forEach(function(p){G.tiles[p[1]][p[0]].k='wall'});
+  addB('door',0,7,true);
+  var place=function(list){list.forEach(function(s){if(s[0]!=='issue')addB(s[0],s[1],s[2],true)})};
+  var hline=function(y,x0,x1){var r=[];for(var x=x0;x<=x1;x++)r.push([x,y]);return r},vline=function(x,y0,y1){var r=[];for(var y=y0;y<=y1;y++)r.push([x,y]);return r};
+  var halls=function(list){list.forEach(function(r){addB('hall',r[0],r[1],true)})};
+  var parts=function(list){list.forEach(function(p){addB('partition',p[0],p[1],true)})};
+  if(scen==='asfound'){
+    /* partitions everywhere: the lobby is cut off from the back office with one doorway at (3,8), the copier is boxed in behind the review desks, the cashier and supervisor sit behind their own wall and another walls off the file room and mail room below the core */
+    parts(vline(3,1,7).concat(vline(3,9,12),hline(10,6,11),vline(6,1,6),hline(9,5,7),vline(10,5,8)));
+    halls(vline(2,2,12).concat([[3,8],[4,8]],vline(4,2,12),vline(12,2,12),hline(11,5,11)));
+    place([['intake',1,5],['issue',1,9],['records',5,3],['review',5,5],['eng',5,7],['cashier',11,4],['signoff',11,7],['copier',7,2],['fileroom',7,12],['mailroom',11,12],['meeting',10,2],['coffee',1,12]]);
+  }else if(scen==='lead'){
+    /* one long corridor with partitions on both sides; everything a file needs is at the far end */
+    parts(vline(3,1,5).concat(vline(3,9,12),vline(6,1,4),vline(6,10,12),vline(10,1,3),vline(10,11,12)));
+    halls(hline(7,1,12).concat(vline(12,1,12)));
+    place([['intake',1,5],['issue',1,9],['records',5,2],['review',11,2],['eng',11,9],['cashier',5,11],['signoff',11,6],['copier',12,0],['fileroom',12,13],['mailroom',1,12],['meeting',1,1],['coffee',7,12]]);
+  }else if(scen==='quality'){
+    parts(vline(10,2,4).concat(vline(10,10,12)));
+    halls(hline(7,1,7).concat(vline(5,2,12),vline(7,2,12),hline(11,7,12)));
+    place([['intake',1,6],['issue',1,8],['records',4,4],['review',6,4],['eng',6,9],['cashier',4,9],['signoff',11,8],['copier',4,11],['fileroom',12,12],['mailroom',12,2],['meeting',12,5],['coffee',8,9]]);
+    G.B.forEach(function(b){if(b.ctq)b.drift=-CTQ[b.type].tol*.6});
+  }else if(scen==='capacity'){
+    parts(hline(3,4,6).concat(hline(11,4,6)));
+    halls(hline(7,1,12).concat(vline(3,2,12),vline(7,2,12),vline(12,2,12)));
+    place([['intake',1,6],['issue',1,8],['records',4,5],['review',6,5],['eng',6,9],['cashier',4,9],['signoff',11,6],['copier',2,4],['fileroom',11,9],['mailroom',2,10],['meeting',11,3],['coffee',11,11]]);
+    G.up.eforms=true;G.up.checklist=true;G.up.feecalc=true;G.up.fives=true;G.W.forEach(function(w){w.skill=1});
+  }else{halls(hline(7,1,3))}
+  /* a running office is found mid-stream: a few files already at various desks */
+  if(scen!=='blank'){var r2=lcg(scen.length*5+1),desks=G.B.filter(function(b){return b.step&&b.step!=='intake'});desks.forEach(function(b){var n=1+Math.floor(r2()*3);for(var i=0;i<n;i++){var f=mkFile(SRC_ORDER[Math.floor(r2()*4)]);f.stage=b.step;f.born=-r2()*120;f.recv=f.clock=f.born;f.needsEng=b.step==='eng'||f.needsEng;f.at=b.id;b.tray.push(f);G.F.push(f)}})}
+}
+function mkFile(src){src=src||'walkin';var S=SOURCES[src],kind=S.kinds[rint(0,S.kinds.length-1)];var f={id:G.fid++,src:src,kind:kind,name:kind+' permit',who:src==='internal'?['Parks','Schools','Health','Housing','Transport'][rint(0,4)]+' dept.':G.names[rint(0,G.names.length-1)],born:G.t,sla:(S.sla+rint(-SLA_VAR,SLA_VAR))*G.sc.sla,stage:'queue',needsEng:Math.random()<S.eng,incomplete:false,loops:0,rework:0,hold:0,at:null,carried:null,done:false,recv:src==='walkin'?null:G.t,clock:src==='walkin'?null:G.t,waste:0,appT:0,handle:0,st:{}};return f}
+function addB(type,x,y,free){
+  if(G.mapVer!=null)G.mapVer++;
+  var d=BT[type],b={id:G.bid++,type:type,name:d.name,x:x,y:y,step:d.step||null,ctq:!!d.ctq,tray:[],res:null,busy:null,S:{busyT:0,idleT:0,why:{},runs:0}};
+  if(d.ctq){b.drift=0;b.pts=[];b.plan=null;b.badRun=0;b.down=0}
+  if(type==='signoff'){b.batchT=0;b.meetIn=MEET_EVERY*.6;b.meeting=0}
+  if(type==='copier')b.user=null;
+  if(type==='fileroom')b.archived=0;
+  if(!free){spendCap(d.cost);G.stats.build+=d.cost;sfx(type==='hall'?'hall':'build',.1);markImp('Added '+d.name.toLowerCase(),d.cost)}
+  G.B.push(b);G.bmap[b.id]=b;G.tiles[y][x].b=b.id;G.mapVer++;G.dirty.all=true;
+  if(d.worker)addWorker(d.worker,b);
+  return b;
+}
+function addWorker(role,b){var w={id:G.wid++,role:role,name:G.names[(G.wid+3)%G.names.length]+'',x:b.x+.5,y:b.y+1.3,home:b.id,task:null,route:null,carry:null,face:1,skill:0,moving:false,wait:'',S:{busyT:0,walkT:0,idleT:0,why:{}},breakIn:BREAK_EVERY*(.5+Math.random())};G.W.push(w);return w}
+function bAt(x,y){var t=tileAt(x,y);return t&&t.b?G.bmap[t.b]:null}
+function tileAt(x,y){return (x>=0&&y>=0&&x<N&&y<N)?G.tiles[y][x]:null}
+function inB(x,y){return x>=0&&y>=0&&x<N&&y<N}
+function blocked(x,y){var t=tileAt(x,y);if(!t)return true;if(t.k==='plant'||t.k==='wall')return true;var b=t.b?G.bmap[t.b]:null;return !!(b&&BT[b.type].block)}
+function stations(type){return G.B.filter(function(b){return b.type===type})}
+function byStep(step){return G.B.filter(function(b){return b.step===step})}
+function nearest(list,p){var best=null,bd=1e9;list.forEach(function(b){var d=travel(b,p);if(d<bd){bd=d;best=b}});return best}
+var SPOT_O=[[0,1],[1,0],[-1,0],[0,-1]];
+function doorTile(){var d=G.B.filter(function(b){return b.type==='door'})[0];return d?{x:d.x,y:d.y}:{x:0,y:7}}
+function spot(b){if(b._sv===G.mapVer&&b._sp)return b._sp;var dt=doorTile(),r=distFrom(dt.x,dt.y),best=null,bs=Infinity;
+  SPOT_O.forEach(function(o,i){var nx=b.x+o[0],ny=b.y+o[1];if(!inB(nx,ny)||blocked(nx,ny))return;var nb=bAt(nx,ny),sc=i*.01+(nb&&nb.type!=='hall'?5:0)+(r.d[ny*N+nx]===Infinity?100:0);if(sc<bs){bs=sc;best=o}});
+  var o=best||[0,1];b._sp={x:b.x+.5+o[0]*.65,y:b.y+.5+o[1]*.65};b._sv=G.mapVer;return b._sp}
+/* everything a worker must reach, and whether a wall at (x,y) would cut any of it off from the public entrance */
+function cutsOff(x,y){var t=tileAt(x,y),old=t.k;t.k='wall';var dt=doorTile(),seen=new Uint8Array(N*N),q=[dt.y*N+dt.x];seen[q[0]]=1;
+  while(q.length){var i=q.pop(),cx=i%N,cy=Math.floor(i/N);SPOT_O.forEach(function(o){var nx=cx+o[0],ny=cy+o[1];if(!inB(nx,ny))return;var j=ny*N+nx;if(seen[j]||blocked(nx,ny))return;seen[j]=1;q.push(j)})}
+  var bad=G.B.filter(function(b){if(b.type==='hall'||b.type==='door'||BT[b.type].block)return false;return !SPOT_O.some(function(o){var nx=b.x+o[0],ny=b.y+o[1];return inB(nx,ny)&&seen[ny*N+nx]})})[0];t.k=old;return bad||null}
+function capital(){return Infinity}
+function spendCap(c){}
+function capName(){return G.budget==null?'coins':'budget'}
+
+/* ---------- routing (Dijkstra on tiles; aisles are fast, desks slow, planters impassable) ---------- */
+var DIST={};
+function tileCost(x,y){var t=tileAt(x,y);if(!t||t.k==='plant'||t.k==='wall')return Infinity;var b=t.b?G.bmap[t.b]:null;if(b){if(BT[b.type].block)return Infinity;if(b.type==='hall')return .5;return 2.5}return 1}
+function distFrom(sx,sy){var key=sx+','+sy+'|'+G.mapVer;if(DIST[key])return DIST[key];if(Object.keys(DIST).length>400)DIST={};
+  var d=new Float64Array(N*N).fill(Infinity),prev=new Int16Array(N*N).fill(-1),done=new Uint8Array(N*N);d[sy*N+sx]=0;
+  for(var it=0;it<N*N;it++){var bi=-1,bd=Infinity;for(var i=0;i<N*N;i++)if(!done[i]&&d[i]<bd){bd=d[i];bi=i}if(bi<0)break;done[bi]=1;var cx=bi%N,cy=Math.floor(bi/N);
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(o){var nx=cx+o[0],ny=cy+o[1];if(!inB(nx,ny))return;var c=tileCost(nx,ny);if(c===Infinity)return;var cc=tileCost(cx,cy);if(cc===Infinity)cc=1;var nd=bd+(c+cc)/2;var ni=ny*N+nx;if(nd<d[ni]){d[ni]=nd;prev[ni]=bi}})}
+  return DIST[key]={d:d,prev:prev}}
+function travel(b,p){var r=distFrom(clamp(Math.floor(p.x),0,N-1),clamp(Math.floor(p.y),0,N-1));var v=r.d[b.y*N+b.x];return v===Infinity?999:v}
+function route(from,to){var sx=clamp(Math.floor(from.x),0,N-1),sy=clamp(Math.floor(from.y),0,N-1),tx=clamp(Math.floor(to.x),0,N-1),ty=clamp(Math.floor(to.y),0,N-1);
+  var r=distFrom(sx,sy),pts=[],i=ty*N+tx;if(r.d[i]===Infinity)return {pts:[],vs:1,none:true};
+  while(i>=0&&i!==sy*N+sx){var x=i%N,y=Math.floor(i/N);pts.push({x:x+.5+(Math.random()-.5)*.3,y:y+.5+(Math.random()-.5)*.3});i=r.prev[i]}
+  pts.reverse();pts.push(to);return {pts:pts,vs:.9+Math.random()*.2}}
+
+/* ---------- bookkeeping ---------- */
+function log(msg,cls){G.log.unshift({t:G.t,msg:msg,cls:cls||''});if(G.log.length>40)G.log.pop();G.dirty.log=true}
+function hint(msg,warn){var h=$('#hint');h.textContent=msg;h.hidden=false;h.className='hint'+(warn?' warn':'');clearTimeout(h._t);h._t=setTimeout(function(){h.hidden=true},warn?6000:3500)}
+function rec(step,ok,cause,loss,where){var s=G.stats;s.opps++;G.cum.opps++;if(!ok){s.def++;G.cum.def++;s.defects[cause]=(s.defects[cause]||0)+1;s.copq+=loss||0;G.cum.copq+=loss||0;G.defLog.push({shift:G.shift,t:G.t,step:step,cause:cause,loss:loss||0,where:where||''});if(cause!=='Outside service standard')sfx('bad',.6)}}
+function waste(f,sec,where){sec=Math.max(0,sec||0);logErr(f,sec,where);f.waste+=sec;G.stats.wasteT+=sec;G.cum.wasteT+=sec;G.stats.reworkN++;if(!f.rework)G.stats.rwFiles++}
+function markImp(what,cost){var c={};for(var k in G.cum)c[k]=G.cum[k];G.impSpend+=cost||0;G.imps.push({what:what,cost:cost||0,at:c,shift:G.shift,spend:G.impSpend})}
+function diffCum(a,b){var d={};for(var k in a)d[k]=a[k]-(b?b[k]:0);return d}
+function rounds(){var f=G.imps[0],l=G.imps[G.imps.length-1];return {r1:f?f.at:diffCum(G.cum),r2:f&&l!==f?diffCum(l.at,f.at):null,r3:f?diffCum(G.cum,l.at):null,imps:G.imps.length,spend:G.impSpend}}
+function roundRates(c){var m=Math.max(c.min,1e-6),k=10/m,o=c.onTime+c.late,dp=c.opps?c.def/c.opps*1e6:0;return {min:c.min,rev:c.revenue*k,wages:c.wages*k,ops:c.ops*k,copq:c.copq*k,profit:(c.revenue-c.wages-c.ops)*k,onT:o?c.onTime/o:null,orders:o,issued:c.issued*k,dpmo:dp,sigma:sigmaOf(dp,c.opps),def:c.def*k,opps:c.opps,cycle:c.leadN?c.leadSum/c.leadN:null,wastePer:c.issued?c.wasteT/c.issued:null,waste:c.wasteT*k}}
+var VAL=10,MIN_N=10,PREWARM=30;
+function baseCycle(){var r=rounds().r1;return r&&r.leadN?r.leadSum/r.leadN:null}
+function projectScore(){var rr=rounds();if(!rr.imps&&!rr.spend)return null;var b=rr.r1,a=rr.r3;if(!b||b.leadN<MIN_N)return -Math.round(rr.spend);if(!a||a.leadN<MIN_N)return null;return Math.round((b.leadSum/b.leadN-a.leadSum/a.leadN)*VAL-rr.spend)}
+function invNorm(p){p=clamp(p,1e-9,1-1e-9);var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00],pl=.02425,q,r;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}
+  if(p<=1-pl){q=p-.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)}
+  q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}
+function sigmaOf(dpmo,opps){if(!opps)return null;return invNorm(1-dpmo/1e6)+1.5}
+function sigTxt(s){return s==null?'—':(s>=6?'6+':fx(s,2))}
+function dpmoTxt(d,o){return o?Math.round(d).toLocaleString():'—'}
+function wagesDue(){return Math.round(G.W.length*WAGE_PER_MIN*Math.max(0,G.t)/60)}
+function elapsed(){return G.phase==='run'?Math.max(G.t,1):(G.shiftLen||1)}
+
+/* ---------- tasks ---------- */
+function mkTask(o){o.i=0;o.mode='walk';o.t=0;return o}
+function walkStep(x,y,label){return {x:x,y:y,dur:0,label:label}}
+function trayFor(step,p){var st=step==='callback'?'intake':step;var all=byStep(st),list=all.filter(function(b){return b.tray.length<TRAY});if(!list.length)list=all;if(!list.length)return null;
+  /* hand the file to the least-loaded desk of that kind (in-tray plus the one being worked on); ties go to the nearest */
+  var load=function(b){return b.tray.length+(b.busy?1:0)},best=Math.min.apply(null,list.map(load));return nearest(list.filter(function(b){return load(b)===best}),p)}
+/* Steps added while a step's fn runs are inserted right after it, before the walk home. */
+function queueStep(w,st){var T=w.task;if(!T)return;if(T.ins==null)T.ins=T.i+1;T.steps.splice(T.ins++,0,st)}
+function dropAt(f,tgt){f.carried=null;tgt.tray.push(f);f.at=tgt.id}
+function sendTo(f,step,w){
+  /* an electronic hop is instant; otherwise the worker carries the file to the nearest in-tray with room and waits there if it is full */
+  f.stage=step;var tgt=trayFor(step,{x:w.x,y:w.y});
+  if(!tgt){f.at=null;f.carried=null;G.F.splice(G.F.indexOf(f),1);log(f.name+' had nowhere to go: there is no '+STEP_LABEL[step].toLowerCase()+' desk.','bad');return}
+  if(G.up.eflow){w.carry=null;dropAt(f,tgt);return}
+  f.carried=w.id;w.carry=f;var sp=spot(tgt);
+  queueStep(w,{x:sp.x,y:sp.y,dur:.4,label:'Carrying to '+tgt.name.toLowerCase(),gate:function(){var t2=G.bmap[tgt.id];return !!(t2&&t2.tray.length<TRAY)},gateWhy:'In-tray full at '+tgt.name.toLowerCase(),fn:function(w){var t2=G.bmap[tgt.id];w.carry=null;if(!t2){f.carried=null;var alt=trayFor(step,w);if(alt)dropAt(f,alt);return}dropAt(f,t2)}});
+}
+function homeStep(w){var b=G.bmap[w.home];if(!b)return null;return walkStep(b.x+.5,b.y+1.3,'Back to desk')}
+function errP(base,w){return base*ERRM[w.skill]*G.sc.err}
+
+/* ---------- planning per role ---------- */
+function planWorker(w){
+  var home=G.bmap[w.home];if(!home)return null;
+  /* breaks */
+  if(w.breakIn<=0){var cf=stations('coffee');if(cf.length){var c=nearest(cf,w);w.breakIn=BREAK_EVERY*(.7+Math.random()*.6);var cs=spot(c);return mkTask({label:'Coffee break',brk:true,steps:[{x:cs.x,y:cs.y,dur:BREAK_LEN,fn:function(){}},homeStep(w)]})}w.breakIn=BREAK_EVERY}
+  if(w.role==='supervisor')return planSupervisor(w,home);
+  if(home.ctq)return planReviewer(w,home);
+  return planClerk(w,home);
+}
+function clerkJob(w,b){
+  /* one unit of work at a clerk desk b; null when there is nothing to do there */
+  var sp=spot(b),steps=[],here=(w.home===b.id);
+  if(b.step==='intake'){
+    var ready=b.tray.filter(function(f){return f.stage==='callbackdone'})[0];
+    if(ready){steps.push(walkStep(sp.x,sp.y,'Picking up a file'),{x:sp.x,y:sp.y,dur:.5,fn:function(w){var k=b.tray.indexOf(ready);if(k<0)return;b.tray.splice(k,1);sendTo(ready,'review',w)}});return mkTask({busy:true,label:'Sending a completed file to review',station:b,steps:steps,tail:true})}
+    var call=b.tray.filter(function(f){return f.stage==='callback'})[0];
+    if(call){steps.push(walkStep(sp.x,sp.y),{x:sp.x,y:sp.y,dur:5,fn:function(){call.stage='callbackwait';call.hold=CALLBACK;waste(call,5,'phone');sfx('phone',.5)}});return mkTask({busy:true,label:'Phoning the applicant',station:b,steps:steps,tail:true})}
+    var intakeOf=function(f,label,copyLabel,work){/* open an application at the counter, then copy or print it before it goes to Records */
+      steps.push(walkStep(sp.x,sp.y),{x:sp.x,y:sp.y,dur:work,fn:function(w){if(f.stage==='queue'){var i=G.queue.indexOf(f);if(i<0)return;G.queue.splice(i,1)}else{var k=b.tray.indexOf(f);if(k>=0)b.tray.splice(k,1)}f.stage='intake';f.at=null;if(f.recv==null){f.recv=G.t;f.clock=G.t}f.handle+=work;
+          var S=SOURCES[f.src],base=f.src==='online'?S.inc:(G.up.checklist?Math.min(S.inc,.05):S.inc);var bad=Math.random()<errP(base,w);f.incomplete=bad;rec('intake',!bad,'Incomplete application accepted',0,b.name);b.S.runs++;sfx('type',.3);
+          if(!G.up.eforms||f.src!=='online'){var cp=stations('copier');if(cp.length&&!(G.up.eforms&&f.src==='online')){var c=nearest(cp,w),csp=spot(c);f.stage='copy';f.carried=w.id;w.carry=f;
+            queueStep(w,{x:csp.x,y:csp.y,dur:COPY_T,label:copyLabel,gate:function(){var c2=G.bmap[c.id];return !!(c2&&(!c2.user||c2.user===w.id))},gateWhy:'Copier busy',start:function(w){var c2=G.bmap[c.id];if(c2)c2.user=w.id;sfx('copier',.4)},fn:function(w){var c2=G.bmap[c.id];if(c2)c2.user=null;f.handle+=COPY_T;sendTo(f,'records',w)}});return}}
+          sendTo(f,'records',w)}});
+      return mkTask({busy:true,label:label,station:b,claim:true,steps:steps,tail:true})};
+    if(b.busy)return null;
+    if(G.queue.length)return intakeOf(G.queue[0],'Serving '+G.queue[0].who,'Copying the file',BT.intake.work);
+    var onl=b.tray.filter(function(f){return f.stage==='online'})[0];if(onl)return intakeOf(onl,'Opening an online application','Printing the online application',BT.intake.work*.6);
+    var ml=b.tray.filter(function(f){return f.stage==='mail'})[0];if(ml)return intakeOf(ml,'Opening the post','Copying the file',BT.intake.work*.8);
+    var mr=stations('mailroom').filter(function(m){return m.tray.length&&!m.fetch})[0];
+    if(mr&&b.tray.length<TRAY){var ms=spot(mr);mr.fetch=w.id;var bundle=null;steps.push({x:ms.x,y:ms.y,dur:.8,label:'Fetching the post',fn:function(w){bundle=mr.tray.splice(0,Math.max(1,TRAY-b.tray.length));mr.fetch=null;if(!bundle.length)return false;bundle.forEach(function(f){f.carried=w.id});w.carry=bundle[0];w.carryN=bundle.length},onAbort:function(){}},
+        {x:sp.x,y:sp.y,dur:.4,label:'Bringing the post to the counter',fn:function(w){(bundle||[]).forEach(function(f){f.carried=null;b.tray.push(f);f.at=b.id});w.carry=null;w.carryN=0}});
+      return mkTask({busy:true,label:'Fetching the post',station:b,claim:true,steps:steps,tail:true,onAbort:function(){if(mr.fetch===w.id)mr.fetch=null}})}
+    return null;
+  }
+  if(!b.tray.length||b.busy)return null;
+  var f2=b.tray[0];steps.push(walkStep(sp.x,sp.y));
+  var take=function(){var k=b.tray.indexOf(f2);if(k>=0)b.tray.splice(k,1);f2.at=null};
+  if(b.step==='records'){steps.push({x:sp.x,y:sp.y,dur:BT.records.work,start:take,fn:function(w){b.S.runs++;sfx('type',.3);f2.handle+=BT.records.work;var bad=Math.random()<errP(G.up.fives?.02:P.misfile,w);rec('records',!bad,'Mis-filed',bad?10:0,b.name);
+      if(bad){waste(f2,BT.records.work+SEARCH_T/4,'misfile');var fr=stations('fileroom');f2.stage='lost';f2.hold=G.up.tracker?10:(G.up.fives?SEARCH_T/3:SEARCH_T);f2.rework++;if(fr.length){var r=nearest(fr,w);r.tray.push(f2);f2.at=r.id}else{b.tray.push(f2);f2.at=b.id}log(f2.name+' was mis-filed and is lost in the file room.','bad');return}
+      sendTo(f2,'review',w)}});return mkTask({busy:true,label:'Logging a file',station:b,claim:true,steps:steps,tail:true})}
+  if(b.step==='cashier'){steps.push({x:sp.x,y:sp.y,dur:BT.cashier.work*(f2.feeRedo?1.5:1),start:take,fn:function(w){b.S.runs++;sfx('cash',.3);var bad=Math.random()<errP(G.up.feecalc?.01:P.fee,w);rec('cashier',!bad,'Fee miscalculated',bad?8:0,b.name);
+      if(bad){waste(f2,BT.cashier.work,'fee');f2.feeRedo=true;f2.rework++;b.tray.push(f2);f2.at=b.id;return}f2.feeRedo=false;sendTo(f2,'signoff',w)}});return mkTask({busy:true,label:'Working out the fee',station:b,claim:true,steps:steps,tail:true})}
+  if(b.step==='issue'){steps.push({x:sp.x,y:sp.y,dur:BT.issue.work,start:take,fn:function(w){b.S.runs++;issueFile(f2,b);
+      var fr=stations('fileroom');if(fr.length&&!G.up.eflow){var r=nearest(fr,w),rs=spot(r);w.carry=f2;f2.carried=w.id;f2.stage='archive';queueStep(w,{x:rs.x,y:rs.y,dur:.4,label:'Archiving the file',fn:function(w){w.carry=null;f2.carried=null;var r2=G.bmap[r.id];if(r2)r2.archived++;var k=G.F.indexOf(f2);if(k>=0)G.F.splice(k,1)}})}else{var k2=G.F.indexOf(f2);if(k2>=0)G.F.splice(k2,1)}}});return mkTask({busy:true,label:'Issuing a permit',station:b,claim:true,steps:steps,tail:true})}
+  return null;
+}
+function issueFile(f,b){if(f.clock==null){f.clock=f.recv=f.born}var lead=G.t-f.clock,gross=G.t-f.recv,late=lead>f.sla;f.done=true;f.doneT=G.t;var rev=late?FEE/2:FEE;G.coins+=rev;G.stats.revenue+=rev;G.cum.revenue+=rev;G.stats.issued++;G.cum.issued++;G.stats.leadSum+=lead;G.stats.leadN++;G.cum.leadSum+=lead;G.cum.leadN++;G.stats.grossSum+=gross;G.stats.appSum+=f.appT;
+  if(late){G.stats.late++;G.cum.late++;rec('issue',false,'Outside service standard',FEE/2,b.name)}else{G.cum.onTime++;rec('issue',true)}
+  G.fileLog.push({shift:G.shift,id:f.id,name:f.name,who:f.who,src:f.src,born:f.born,recv:f.recv,clock:f.clock,done:G.t,lead:lead,gross:gross,waste:f.waste,app:f.appT,sla:f.sla,late:late,rework:f.rework,eng:f.needsEng,st:f.st,status:late?'Late':'On time'});
+  sfx('stamp',.2);setTimeout(function(){sfx('coin',0)},250);G.dirty.apps=true}
+function planClerk(w,home){
+  var t=clerkJob(w,home);if(t)return t;
+  /* fetch found files from the file room (records clerks, or any clerk when cross-trained) */
+  if(home.step==='records'||G.up.crosstrain){var found=null,froom=null;stations('fileroom').forEach(function(r){r.tray.forEach(function(f){if(f.stage==='found'&&!f.carried&&!found){found=f;froom=r}})});
+    if(found){found.carried=w.id;var rs=spot(froom);return mkTask({busy:true,label:'Fetching a lost file',steps:[{x:rs.x,y:rs.y,dur:.5,label:'Fetching a found file',fn:function(w){var k=froom.tray.indexOf(found);if(k>=0)froom.tray.splice(k,1);found.hold=0;sendTo(found,'review',w)}}],tail:true,onAbort:function(){found.carried=null}})}}
+  if(G.up.crosstrain){var others=G.B.filter(function(b){return b.id!==home.id&&BT[b.type].worker==='clerk'&&!b.busy&&(b.step==='intake'?(G.queue.length>0||b.tray.length>0):b.tray.length>0)}).sort(function(a,b){return (b.tray.length+(b.step==='intake'?G.queue.length:0))-(a.tray.length+(a.step==='intake'?G.queue.length:0))});
+    for(var i=0;i<others.length;i++){var t2=clerkJob(w,others[i]);if(t2){t2.label=t2.label+' (helping at '+others[i].name.toLowerCase()+')';return t2}}}
+  w.wait=home.step==='intake'?(G.queue.length?'Counter is busy':'Nothing to open'):'In-tray empty';return null;
+}
+function planReviewer(w,b){
+  if(b.down>0){w.wait='Being coached';return null}
+  if(G.up.alarms&&G.alarms[b.id]&&w.skill>=2&&b.drift!==0){coach(b,true);log(w.name+' saw the control alarm and reset their review method.','good');G.alarms[b.id]=false}
+  if(!b.tray.length||b.busy){w.wait='In-tray empty';return null}
+  var f=b.tray[0],sp=spot(b),M=CTQ[b.type],steps=[walkStep(sp.x,sp.y)];
+  steps.push({x:sp.x,y:sp.y,dur:BT[b.type].work*(f.gold?1.5:1),start:function(){var k=b.tray.indexOf(f);if(k>=0)b.tray.splice(k,1);f.at=null},fn:function(w){
+    b.S.runs++;sfx('type',.3);
+    var sd=M.sd*(G.up.stdrev?.65:1)*SDM[w.skill]*G.sc.sd,val=M.target+b.drift+gauss()*sd;
+    b.drift+=(gauss()*.12*M.sd-.2*M.sd*(G.up.huddle?.4:1))*G.sc.drift;
+    b.pts.push(val);if(b.pts.length>40)b.pts.shift();G.measLog.push({shift:G.shift,t:G.t,station:b.name,op:w.name,val:val,file:f.name});
+    var cause=null,loss=0;if(val<M.target-M.tol){cause=BT[b.type].cause;loss=10}else if(val>M.target+M.tol){cause=BT[b.type].over;loss=5}
+    rec(b.type,!cause,cause,loss,b.name);var rdur=BT[b.type].work*(f.gold?1.5:1);f.handle+=rdur;
+    if(G.up.alarms){var n=b.pts.length,trend=n>=5&&b.pts.slice(-5).every(function(v,i,a){return i===0||v<a[i-1]});if(cause||trend){G.alarms[b.id]=true;log('Control alarm at the '+b.name.toLowerCase()+(trend?' (five scores trending down).':' (score out of spec).'),'bad');sfx('alarm',1)}}
+    b.badRun=(cause===BT[b.type].cause)?(b.badRun||0)+1:0;
+    if(b.badRun>=3){b.badRun=0;coach(b,true);log(w.name+' noticed three bad reviews in a row and stopped to reset. Reactive, after the rework: a control chart would have caught it sooner.','info')}
+    if(cause===BT[b.type].cause){waste(f,rdur,b.type);f.rework++;f.loops++;b.tray.push(f);f.at=b.id;return}
+    f.gold=cause===BT[b.type].over;
+    if(b.type==='review'&&f.incomplete){f.incomplete=false;waste(f,f.handle,'incomplete');f.handle=0;f.rework++;log(f.name+' turned out to be incomplete at review and went back to intake.','bad');sendTo(f,'callback',w);return}
+    sendTo(f,(b.type==='review'&&f.needsEng)?'eng':'cashier',w)}});
+  return mkTask({busy:true,label:(b.type==='review'?'Reviewing ':'Checking ')+f.name.toLowerCase(),station:b,claim:true,steps:steps,tail:true});
+}
+function planSupervisor(w,b){
+  if(b.meetIn<=0){var mr=stations('meeting');b.meetIn=MEET_EVERY*(G.up.meetfree?2:1)*(.8+Math.random()*.4);var mp=mr.length?spot(nearest(mr,w)):spot(b);
+    return mkTask({label:'In a meeting',meet:true,steps:[{x:mp.x,y:mp.y,dur:MEET_LEN,fn:function(){}},homeStep(w)]})}
+  var batch=G.up.delegate?1:BATCH,oldest=b.tray.length?Math.max.apply(null,b.tray.map(function(f){return G.t-(f.sinceT||G.t)})):0;
+  if(!b.tray.length){w.wait='In-tray empty';return null}
+  if(b.tray.length<batch&&oldest<BATCH_WAIT){w.wait='Waiting for a batch of '+batch+' ('+b.tray.length+' so far)';return null}
+  var files=b.tray.slice(0,Math.max(batch,Math.min(b.tray.length,BATCH))),sp=spot(b),steps=[walkStep(sp.x,sp.y)];
+  steps.push({x:sp.x,y:sp.y,dur:BT.signoff.work*files.length,start:function(){files.forEach(function(f){var k=b.tray.indexOf(f);if(k>=0)b.tray.splice(k,1);f.at=null})},fn:function(w){
+    var good=[];files.forEach(function(f){b.S.runs++;var bad=Math.random()<errP(G.up.delegate?.005:P.unsigned,w);rec('signoff',!bad,'Unsigned page',bad?6:0,b.name);if(bad){waste(f,BT.signoff.work,'unsigned');f.rework++;b.tray.push(f);f.at=b.id;f.sinceT=G.t}else good.push(f)});sfx('stamp',.2);
+    if(!good.length)return;
+    /* signed permits go to the requestor automatically (e-mail, post or a call to collect): the clock stops here */
+    good.forEach(function(f){issueFile(f,b);var k=G.F.indexOf(f);if(k>=0)G.F.splice(k,1)});
+  }});
+  return mkTask({busy:true,label:'Signing '+files.length+' permit'+(files.length>1?'s':''),station:b,claim:true,steps:steps,tail:true});
+}
+function coach(b,auto){if(b.down>0)return;G.coins-=COACH_COST;if(!auto)G.impSpend+=COACH_COST;G.stats.ops+=COACH_COST;G.cum.ops+=COACH_COST;b.down=COACH_TIME;b.drift=0;b.pts=[];b.badRun=0;G.alarms[b.id]=false;sfx('coach',.2);if(!auto)log('Coaching session at the '+b.name.toLowerCase()+': method reset to standard.','good');G.dirty.all=true}
+
+/* ---------- worker update ---------- */
+function updWorker(w,dt){
+  w.breakIn-=dt;
+  if(!w.task){w.task=planWorker(w);if(!w.task){w.S.idleT+=dt;w.moving=false;var home=G.bmap[w.home];if(home){home.S.idleT+=dt;if(w.wait)home.S.why[w.wait]=(home.S.why[w.wait]||0)+dt}if(w.wait)w.S.why[w.wait]=(w.S.why[w.wait]||0)+dt;return}
+    if(w.task.claim&&w.task.station){w.task.station.busy=w.id}if(w.task.tail){var hs=homeStep(w);if(hs)w.task.steps.push(hs)}w.wait=''}
+  var T=w.task,s=T.steps[T.i];
+  if(!s){finishTask(w);return}
+  if(T.mode==='walk'){
+    var dx=s.x-w.x,dy=s.y-w.y,d=Math.hypot(dx,dy);
+    if(d<.08){w.x=s.x;w.y=s.y;w.route=null;w.moving=false;
+      if(s.gate&&!s.gate(w)){w.wait=s.gateWhy||'Waiting';w.S.why[w.wait]=(w.S.why[w.wait]||0)+dt;w.S.idleT+=dt;var h2=G.bmap[w.home];if(h2){h2.S.idleT+=dt;h2.S.why[w.wait]=(h2.S.why[w.wait]||0)+dt}if(/full/.test(w.wait))G.stats.fullT+=dt;return}
+      w.wait='';T.mode='work';T.t=s.dur*(T.busy&&s.dur>1?TASKM[w.skill]:1);if(s.start)s.start(w);sfxStep(w,T,s);return}
+    if(!w.route||w.route.tgt!==s||w.route.ver!==G.mapVer){w.route=route(w,s);w.route.tgt=s;w.route.k=0;w.route.ver=G.mapVer}
+    if(w.route.none){w.moving=false;w.wait='Walled off: no way through';w.S.idleT+=dt;w.stuck=(w.stuck||0)+dt;if(w.stuck>2){w.stuck=0;log(w.name+' could not find a way past the walls and gave up on the task.','bad');hint(w.name+' is walled off. Open a gap in the partitions.',true);finishTask(w)}return}
+    w.stuck=0;
+    var spd=1.7*WALK[w.skill]*w.route.vs*dt,moved=0;w.moving=true;
+    while(spd>0&&w.route.k<w.route.pts.length){var p=w.route.pts[w.route.k],ddx=p.x-w.x,ddy=p.y-w.y,dd=Math.hypot(ddx,ddy),t0=tileAt(Math.floor(w.x),Math.floor(w.y)),tb=t0&&t0.b?G.bmap[t0.b]:null,mult=(tb&&tb.type==='hall')?2:(tb?.6:1);var step=Math.min(dd,spd*mult);
+      if(dd<1e-6){w.route.k++;continue}w.x+=ddx/dd*step;w.y+=ddy/dd*step;w.face=ddx>=0?1:-1;spd-=step/mult;moved+=step;if(step>=dd-1e-6)w.route.k++}
+    if(w.route.k>=w.route.pts.length&&Math.hypot(s.x-w.x,s.y-w.y)>.08&&Math.hypot(s.x-w.x,s.y-w.y)<.6){w.x=s.x;w.y=s.y}
+    w.S.walkT+=dt;if(T.busy){w.S.busyT+=dt;G.stats.walkT+=dt;G.stats.workT+=dt}else if(T.brk){w.S.why['Coffee break']=(w.S.why['Coffee break']||0)+dt}else if(T.meet){G.stats.meetT+=dt}
+    var tx=Math.floor(w.x),ty=Math.floor(w.y);if(inB(tx,ty)){G.tiles[ty][tx].walk+=dt}
+    if(!w.trail)w.trail=[];if(moved>0&&(!w.trail.length||Math.hypot(w.trail[w.trail.length-1].x-w.x,w.trail[w.trail.length-1].y-w.y)>.25)){w.trail.push({x:w.x,y:w.y});if(w.trail.length>900)w.trail.shift()}
+    return;
+  }
+  T.t-=dt;w.moving=false;
+  if(T.busy){w.S.busyT+=dt;G.stats.workT+=dt;var hb=T.station||G.bmap[w.home];if(hb)hb.S.busyT+=dt}else if(T.brk){w.S.why['Coffee break']=(w.S.why['Coffee break']||0)+dt;w.S.idleT+=dt}else if(T.meet){G.stats.meetT+=dt;w.S.why['In a meeting']=(w.S.why['In a meeting']||0)+dt;w.S.idleT+=dt}
+  if(T.t<=0){T.ins=T.i+1;var ok=s.fn?s.fn(w):true;if(ok===false){finishTask(w);return}T.i++;T.mode='walk';if(T.i>=T.steps.length)finishTask(w)}
+}
+function finishTask(w){var T=w.task;if(T&&T.station&&T.station.busy===w.id)T.station.busy=null;if(T&&T.onAbort)T.onAbort();
+  /* any file still under this worker's arm goes to the nearest in-tray for its stage */
+  G.F.forEach(function(f){if(f.carried!==w.id)return;f.carried=null;if(f.stage==='archive'){var k=G.F.indexOf(f);if(k>=0)G.F.splice(k,1);return}var st=f.stage==='callback'?'intake':(f.stage==='copy'?'records':f.stage);var tgt=trayFor(STEPS.indexOf(st)>=0?st:'intake',w);if(tgt){tgt.tray.push(f);f.at=tgt.id}});
+  w.carry=null;w.carryN=0;w.task=null;w.route=null}
+
+/* ---------- the shift clock ---------- */
+function tick(dt){
+  if(G.phase!=='run'||G.paused)return;
+  G.t+=dt;G.cum.min+=dt/60;decoyTick(dt);G.cum.wages+=G.W.length*WAGE_PER_MIN*dt/60;
+  G.F.forEach(function(f){if(f.done)return;var k=f.stage;if(k.indexOf('callback')===0)k='callback';else if(k==='found')k='lost';f.st[k]=(f.st[k]||0)+dt});
+  /* arrivals */
+  if(byStep('intake').length){SRC_ORDER.forEach(function(src){G.next[src]-=dt;if(G.next[src]>0)return;var g=ARR[src],gap=(G.up.appt&&src==='walkin')?(g[0]+g[1])/2:rint(g[0],g[1]);G.next[src]=gap/G.sc.demand;
+      var n=src==='mail'?rint(2,3):1,intk=byStep('intake'),rec0=byStep('records');
+      for(var i=0;i<n;i++){var f=mkFile(src);G.stats.arrivals++;G.stats.arrSrc[src]=(G.stats.arrSrc[src]||0)+1;G.F.push(f);
+        if(src==='walkin'){G.queue.push(f)}
+        else if(src==='online'){if(G.up.eforms&&rec0.length){f.stage='records';var bad=Math.random()<.08*G.sc.err;f.incomplete=bad;rec('intake',!bad,'Incomplete application accepted',0,'Online portal');var r=nearest(rec0,{x:0,y:7});r.tray.push(f);f.at=r.id}else{f.stage='online';var ii=nearest(intk,{x:0,y:7});ii.tray.push(f);f.at=ii.id}}
+        else if(src==='mail'){var mrs=stations('mailroom');f.stage='mail';var dest=mrs.length?nearest(mrs,{x:0,y:7}):nearest(intk,{x:0,y:7});dest.tray.push(f);f.at=dest.id}
+        else{f.stage='records';if(rec0.length){var r2=nearest(rec0,{x:0,y:7});r2.tray.push(f);f.at=r2.id}else{var i2=nearest(intk,{x:0,y:7});f.stage='mail';i2.tray.push(f);f.at=i2.id}}}
+      G.dirty.apps=true})}
+  /* walk-outs and abandonment */
+  for(var i=G.queue.length-1;i>=0;i--){var q=G.queue[i];if(G.t-q.born>WALKOUT){G.queue.splice(i,1);G.F.splice(G.F.indexOf(q),1);G.stats.walkouts++;rec('queue',false,'Walked out',FEE/2,'Public entrance');log(q.who+' gave up waiting at the door.','bad');G.dirty.apps=true}}
+  for(var j=G.F.length-1;j>=0;j--){var fl=G.F[j];if(fl.done||fl.carried||fl.at==null)continue;
+    if(G.t-(fl.clock==null?fl.born:fl.clock)>fl.sla*ABANDON){var st=G.bmap[fl.at];if(st){var k=st.tray.indexOf(fl);if(k>=0)st.tray.splice(k,1)}G.F.splice(j,1);G.stats.abandoned++;rec('lead',false,'Abandoned application',FEE,st?st.name:'');log(fl.who+' withdrew the '+fl.name.toLowerCase()+' after waiting too long.','bad');G.dirty.apps=true;continue}
+    if(fl.stage==='callbackwait'){fl.hold-=dt;if(fl.hold<=0){fl.stage='callbackdone';fl.appT+=G.t-fl.clock;fl.clock=G.t}}
+    if(fl.stage==='lost'){fl.hold-=dt;if(fl.hold<=0){fl.stage='found';var sb=G.bmap[fl.at];if(sb&&sb.type!=='fileroom'){var ki=sb.tray.indexOf(fl);if(ki>=0)sb.tray.splice(ki,1);var tg=trayFor('review',sb);fl.stage='review';if(tg){tg.tray.push(fl);fl.at=tg.id}else{sb.tray.push(fl)}}}}
+  }
+  G.B.forEach(function(b){if(b.type==='signoff'){b.meetIn-=dt;b.tray.forEach(function(f){if(f.sinceT==null)f.sinceT=G.t})}if(b.ctq&&b.down>0)b.down-=dt;if(b.step&&b.tray.length>=TRAY)G.stats.fullT+=dt/Math.max(1,byStep(b.step).length)});
+  G.W.forEach(function(w){updWorker(w,dt)});
+}
+function prewarm(skip,keep){G.phase='run';G.paused=false;G.shift=0;var n=Math.round(skip*60/.05),i,k;for(i=0;i<n;i++)tick(.05);for(k in G.cum)G.cum[k]=0;G.fileLog=[];G.defLog=[];G.measLog=[];G.errLog=[];n=Math.round(keep*60/.05);for(i=0;i<n;i++)tick(.05);var t0=G.t;G.fileLog.forEach(function(r){r.born-=t0;r.recv-=t0;r.clock-=t0;r.done-=t0});G.defLog.forEach(function(d){d.t-=t0});G.errLog.forEach(function(d){d.t-=t0});G.measLog.forEach(function(d){d.t-=t0});G.shift=1;G.phase='intro';G.log=[];G.imps=[];G.impSpend=0;G.coins=0;G.stats=fresh();G.alarms={};G.W.forEach(function(w){w.S={busyT:0,walkT:0,idleT:0,why:{}};w.trail=[]});G.B.forEach(function(b){b.S={busyT:0,idleT:0,why:{},runs:0}});var h=$('#hint');if(h)h.hidden=true;G.dirty.log=true}
+function startShift(){G.phase='run';var t0=G.t;G.F.forEach(function(f){f.born-=t0;if(f.recv!=null)f.recv-=t0;if(f.clock!=null)f.clock-=t0;if(f.sinceT!=null)f.sinceT-=t0});G.t=0;G.paused=false;G.stats=fresh();G.next={walkin:6,online:25,mail:50,internal:80};G.endArm=0;$('#modal').hidden=true;G.dirty.all=true;G.W.forEach(function(w){w.trail=[]});for(var y=0;y<N;y++)for(var x=0;x<N;x++)G.tiles[y][x].walk=0;updHud();renderApps();renderPanel(true);sfx('bell',0)}
+function endShift(){
+  sfx('bell',0);var wages=wagesDue();G.coins-=wages;G.stats.wages=wages;
+  var sum=summarize();G.hist.push(sum);G.phase='review';G.shiftLen=G.t;
+  G.tranche=0;if(G.budget!=null){var rr=rounds();if(rr.imps&&rr.r3&&rr.r3.min>=R3_MIN&&rr.r1.min>=1){var gain=roundRates(rr.r3).profit-roundRates(rr.r1).profit;if(gain>0){G.tranche=Math.min(300,Math.max(50,Math.round(gain)));G.budget+=G.tranche;G.tranches++}}}
+  renderReview(sum);G.dirty.all=true;
+}
+function crewStats(){return ROLE_ORDER.map(function(r){var ws=G.W.filter(function(w){return w.role===r}),busy=0,walk=0;ws.forEach(function(w){busy+=w.S.busyT;walk+=w.S.walkT});var el=elapsed();return {role:r,n:ws.length,util:ws.length?busy/(ws.length*el):0,walkShare:busy?walk/busy:0}})}
+function capability(b){var M=CTQ[b.type],pts=b.pts;if(pts.length<5)return null;var m=pts.reduce(function(a,v){return a+v},0)/pts.length,sd=Math.sqrt(pts.reduce(function(a,v){return a+(v-m)*(v-m)},0)/(pts.length-1))||1e-6;return {mean:m,sd:sd,cp:(2*M.tol)/(6*sd),cpk:Math.min(M.target+M.tol-m,m-(M.target-M.tol))/(3*sd),n:pts.length}}
+function med(a){if(!a.length)return 0;var s=a.slice().sort(function(x,y){return x-y}),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
+function mean(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:0}
+/* every permit this shift: issued ones with their final cycle time, open ones counted up to now (a mis-filed file keeps running) */
+function permitTimes(){var rows=G.fileLog.filter(function(r){return r.shift===G.shift}).map(function(r){return {id:r.id,name:r.name,who:r.who,src:r.src,t:r.lead,open:false,state:'Issued',sla:r.sla,late:r.late,rework:r.rework,waste:r.waste}});
+  G.F.forEach(function(f){if(f.done||f.clock==null)return;var st=f.stage,label=st==='lost'||st==='found'?'Open · mis-filed':st==='callbackwait'?'Open · back with applicant':'Open · '+(STEP_LABEL[st.replace('callbackdone','callback')]||st).toLowerCase();
+    if(st==='callbackwait'||st==='callback')return;var t=G.t-f.clock;rows.push({id:f.id,name:f.name,who:f.who,src:f.src,t:t,open:true,state:label,sla:f.sla,late:t>f.sla,rework:f.rework,waste:f.waste})});
+  var iss=rows.filter(function(r){return !r.open}).map(function(r){return r.t}),all=rows.map(function(r){return r.t});
+  return {rows:rows,n:iss.length,mean:mean(iss),median:med(iss),nAll:all.length,meanAll:mean(all),medianAll:med(all),openN:rows.length-iss.length}}
+function summarize(){
+  var s=G.stats,dp=s.opps?s.def/s.opps*1e6:0,sig=sigmaOf(dp,s.opps);
+  var par=Object.keys(s.defects).map(function(k){return {cause:k,n:s.defects[k]}}).sort(function(a,b){return b.n-a.n});var acc=0;par.forEach(function(r){acc+=r.n;r.cum=acc/s.def;r.vital=acc-r.n<s.def*.8});
+  var minutes=G.t/60,onT=s.issued-s.late;
+  var stationsS=G.B.filter(function(b){return b.step}).map(function(b){var el=elapsed();return {name:b.name,type:b.type,util:b.S.busyT/el,idle:b.S.idleT/el,runs:b.S.runs,why:b.S.why,tray:b.tray.length,cap:b.ctq?capability(b):null}});
+  var bySrc=SRC_ORDER.map(function(src){var fl=G.fileLog.filter(function(r){return r.shift===G.shift&&r.src===src}),n=fl.length,onT=fl.filter(function(r){return !r.late}).length,lead=n?fl.reduce(function(a,r){return a+r.lead},0)/n:0;return {src:src,received:s.arrSrc[src]||0,issued:n,onTime:onT,lead:lead}});
+  return {shift:G.shift,minutes:minutes,bySrc:bySrc,opps:s.opps,def:s.def,dpmo:dp,sigma:sig,pareto:par,copq:Math.round(s.copq),revenue:s.revenue,wages:s.wages,ops:Math.round(s.ops),build:s.build,issued:s.issued,onTime:onT,late:s.late,abandoned:s.abandoned,walkouts:s.walkouts,arrivals:s.arrivals,leadT:s.leadN?s.leadSum/s.leadN:0,pt:permitTimes(),grossT:s.leadN?s.grossSum/s.leadN:0,appT:s.leadN?s.appSum/s.leadN:0,wasteT:s.wasteT,wastePer:s.issued?s.wasteT/s.issued:0,reworkN:s.reworkN,rwFiles:s.rwFiles,walkShare:s.workT?s.walkT/s.workT:0,fullT:s.fullT,meetT:s.meetT,crew:crewStats(),stations:stationsS,received:s.arrivals,openEnd:G.F.length,coins:G.coins};
+}
+function goalCheck(sum){
+  var min=Math.max(sum.minutes,.1),onT=(sum.onTime+sum.late)?sum.onTime/(sum.onTime+sum.late):0,rows=[];
+  var row=function(l,txt,ok,info){rows.push({l:l,v:txt,ok:ok,info:info})};
+  var hasC=sum.issued>0,cyc=function(t){row('Approval cycle time',(hasC?fmtT(sum.leadT):'—')+' average (target under '+fmtT(t)+')',hasC&&sum.leadT<t)},within=function(){row('Inside service standard',pct(onT)+' (target 85%)',(sum.onTime+sum.late)>0&&onT>=.85)};
+  if(G.scen==='lead'){cyc(120);row('Time walking',pct(sum.walkShare)+' (target under 35%)',sum.walkShare<.35)}
+  else if(G.scen==='quality'){row('Sigma level',sigTxt(sum.sigma)+' (target 3.0)',sum.sigma>=3);row('Rework time per permit',(hasC?Math.round(sum.wastePer)+' s':'—')+' (target under 30 s)',hasC&&sum.wastePer<30)}
+  else if(G.scen==='capacity'){var s10=sum.issued/min*10;row('Permits issued per 10 min',fx(s10,1)+' (target 40)',s10>=40);within();row('Applications received',sum.received+' ('+sum.openEnd+' still in the building at shift end)',true,true)}
+  else if(G.scen==='blank'){cyc(120);row('Sigma level',sigTxt(sum.sigma)+' (target 3.0)',sum.sigma>=3)}
+  else{cyc(120);row('Inside service standard',pct(onT),true,true)}
+  row('Rework time this shift',fmtT(sum.wasteT)+' of staff time ('+(hasC?Math.round(sum.wastePer):0)+' s per permit) · does not count against the cycle time, but it eats capacity',true,true);
+  return {rows:rows,met:rows.every(function(r){return r.ok||r.info})};
+}
+/* ---------- player actions ---------- */
+function placeErr(type,x,y){var d=BT[type],t=tileAt(x,y);if(!t)return 'Off the floor.';if(t.k==='plant')return 'A planter is in the way.';if(t.k==='wall')return 'That is a solid concrete wall. It cannot be moved or built on.';if(t.b)return 'Something is already there.';if(d.block){if(G.W.some(function(w){return Math.floor(w.x)===x&&Math.floor(w.y)===y}))return 'Someone is standing there. Wait for them to move.';var cut=cutsOff(x,y);if(cut)return 'That would wall the '+cut.name.toLowerCase()+' off from the rest of the office.'}if(capital()<d.cost)return 'Not enough '+capName()+'. '+d.name+' costs '+d.cost+'.';
+  if(d.road){var ok=[[1,0],[-1,0],[0,1],[0,-1]].some(function(o){var b=bAt(x+o[0],y+o[1]);return b&&b.type==='hall'});if(!ok)return d.name+' needs a clear aisle beside it.'}return ''}
+function bulldoze(x,y){var b=bAt(x,y);if(!b)return;if(b.type==='door'){hint('The public entrance stays where it is.',true);return}
+  var refund=Math.floor(BT[b.type].cost/2);spendCap(-refund);sfx('crumble',.1);markImp('Removed '+b.name.toLowerCase(),-refund);
+  /* files in its tray go to the nearest desk of the same step, or back to the door */
+  b.tray.slice().forEach(function(f){var others=(b.step?byStep(b.step):byStep('intake')).filter(function(o){return o.id!==b.id});if(others.length){var o=nearest(others,b);o.tray.push(f);f.at=o.id}else{G.F.splice(G.F.indexOf(f),1)}});
+  G.W.filter(function(w){return w.home===b.id}).forEach(function(w){if(w.task)finishTask(w);G.W.splice(G.W.indexOf(w),1)});
+  G.W.forEach(function(w){if(w.task&&w.task.station&&w.task.station.id===b.id)finishTask(w)});
+  G.B.splice(G.B.indexOf(b),1);delete G.bmap[b.id];G.tiles[y][x].b=null;G.mapVer++;if(G.sel===b.id)G.sel=null;G.dirty.all=true;log(b.name+' removed ('+refund+' coins back).','info')}
+function train(wid){var w=G.W.filter(function(x){return x.id===wid})[0];if(!w||w.skill>=2)return;var c=TRAIN_COST[w.skill];if(capital()<c){hint('Training costs '+c+' coins of '+capName()+'.',true);return}spendCap(c);w.skill++;G.dirty.all=true;sfx('tada',0);markImp('Trained '+w.name,c);log(w.name+' is now '+SKILL[w.skill].toLowerCase()+'.','good')}
+function buyUp(id){var up=UPS.filter(function(u){return u.id===id})[0];if(!up||G.up[up.id]||capital()<up.cost||upLock(up))return;spendCap(up.cost);G.up[up.id]=true;G.dirty.all=true;sfx('tada',0);markImp(up.name,up.cost);log('Installed '+up.name.toLowerCase()+'.','good')}
+function upLock(u){if(G.budget==null)return '';var need=UP_NEEDS[u.id];if(!need)return '';if(!G.hist.length)return 'Locked until a shift has been measured';
+  var seen=G.hist.some(function(h){return (need.causes&&h.pareto.some(function(r){return need.causes.indexOf(r.cause)>=0}))||(need.walk&&h.walkShare>=need.walk)});return seen?'':'Locked: no evidence yet'}
+
+/* ================= rendering ================= */
+var cv=$('#cv'),ctx=cv.getContext('2d');cv.width=CW;cv.height=CH;
+var VT=0,VH=1,EX={x:32,y:16},EY={x:-32,y:16},CXc=ORX,CYc=ORY+N*TH/2,CAMV=0,ROT=0,ROTA=0,GRX=45,GRY=22,EDGE='rgba(40,50,80,.45)';
+function setView(t){VT=t;VH=1-.92*t;var th=Math.PI/4*(1-t)+ROTA,sq=.5+.5*t,sc=TW/Math.SQRT2*(1-t)+(TW*.62)*t;
+  EX={x:sc*Math.cos(th),y:sc*Math.sin(th)*sq};EY={x:-sc*Math.sin(th),y:sc*Math.cos(th)*sq};
+  CXc=ORX*(1-t)+(CW/2)*t;CYc=(ORY+N*TH/2)*(1-t)+(CH/2-12)*t;GRX=Math.hypot(EX.x,EY.x);GRY=Math.hypot(EX.y,EY.y)}
+setView(0);
+function iso(x,y){var u=x-N/2,v=y-N/2;return {x:CXc+u*EX.x+v*EY.x,y:CYc+u*EX.y+v*EY.y}}
+function fromScreen(px,py){var dx=px-CXc,dy=py-CYc,det=EX.x*EY.y-EY.x*EX.y;return {x:(dx*EY.y-dy*EY.x)/det+N/2,y:(dy*EX.x-dx*EX.y)/det+N/2}}
+function dia(cx,cy,s,lift){var h=s/2,ly=(lift||0)*VH,ax=(EX.x+EY.x)*h,ay=(EX.y+EY.y)*h,bx=(EX.x-EY.x)*h,by=(EX.y-EY.y)*h;var p=[[cx-ax,cy-ay-ly],[cx+bx,cy+by-ly],[cx+ax,cy+ay-ly],[cx-bx,cy-by-ly]];var k=0;for(var i=1;i<4;i++){if(p[i][1]<p[k][1]-.01||(Math.abs(p[i][1]-p[k][1])<=.01&&p[i][0]<p[k][0]))k=i}return k?[p[k],p[(k+1)%4],p[(k+2)%4],p[(k+3)%4]]:p}
+function poly(pts,fill,stroke){ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(var i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
+function block(cx,cy,s,h,top,left,right){var g=dia(cx,cy,s,0),t=dia(cx,cy,s,h);poly([g[3],g[2],t[2],t[3]],left,EDGE);poly([g[2],g[1],t[1],t[2]],right,EDGE);poly(t,top,EDGE);return t}
+function lblock(cx,cy,s,h0,h1,top,left,right){var g=dia(cx,cy,s,h0),t=dia(cx,cy,s,h1);poly([g[3],g[2],t[2],t[3]],left,EDGE);poly([g[2],g[1],t[1],t[2]],right,EDGE);poly(t,top,EDGE);return t}
+function faceR(cx,cy,s,u0,u1,h0,h1,col){var g0=dia(cx,cy,s,h0),g1=dia(cx,cy,s,h1),a=g0[2],b=g0[1],c=g1[1],d=g1[2];var L=function(p,q,u){return [p[0]+(q[0]-p[0])*u,p[1]+(q[1]-p[1])*u]};poly([L(a,b,u0),L(a,b,u1),L(d,c,u1),L(d,c,u0)],col)}
+function faceL(cx,cy,s,u0,u1,h0,h1,col){var g0=dia(cx,cy,s,h0),g1=dia(cx,cy,s,h1),a=g0[3],b=g0[2],c=g1[2],d=g1[3];var L=function(p,q,u){return [p[0]+(q[0]-p[0])*u,p[1]+(q[1]-p[1])*u]};poly([L(a,b,u0),L(a,b,u1),L(d,c,u1),L(d,c,u0)],col)}
+function shadow(c,s){poly(dia(c.x+4,c.y+3,s,0),'rgba(40,50,80,.13)')}
+function cyl(cx,cy,r,h,side,shade,topc){var rx=r*GRX,ry=r*GRY,hh=h*VH;ctx.strokeStyle=EDGE;ctx.lineWidth=1;ctx.fillStyle=side;ctx.beginPath();ctx.moveTo(cx-rx,cy-hh);ctx.lineTo(cx-rx,cy);ctx.ellipse(cx,cy,rx,ry,0,Math.PI,0,true);ctx.lineTo(cx+rx,cy-hh);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=shade;ctx.beginPath();ctx.moveTo(cx+rx*.35,cy-hh);ctx.lineTo(cx+rx,cy-hh);ctx.lineTo(cx+rx,cy);ctx.ellipse(cx,cy,rx,ry,0,0,Math.acos(.35),false);ctx.closePath();ctx.fill();ctx.fillStyle=topc;ctx.beginPath();ctx.ellipse(cx,cy-hh,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.stroke();return cy-hh}
+function puff(x,y,r,col,edge){ctx.fillStyle=col;ctx.strokeStyle=edge||EDGE;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke()}
+function face(x,y,w){ctx.fillStyle='#27334d';ctx.beginPath();ctx.arc(x-w,y,1.2,0,Math.PI*2);ctx.arc(x+w,y,1.2,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,140,160,.6)';ctx.beginPath();ctx.arc(x-w-1.5,y+2.5,1.4,0,Math.PI*2);ctx.arc(x+w+1.5,y+2.5,1.4,0,Math.PI*2);ctx.fill()}
+function dk(x,y){var u=x-N/2,v=y-N/2;return (u*EX.y+v*EY.y)/(Math.hypot(EX.y,EY.y)/Math.SQRT2||1)}
+
+function drawFloor(x,y){
+  var t=G.tiles[y][x],c=iso(x+.5,y+.5),d=dia(c.x,c.y,1,0),b=t.b?G.bmap[t.b]:null;
+  var carpet=((x+y)%2)?'#d6e1f3':'#cdd9ee';if(t.k==='plant'||t.k==='wall')carpet='#c6d2e8';
+  poly(d,carpet,'rgba(120,140,180,.28)');
+  if(b&&b.type==='hall'){poly(d,'#f7f9fd','rgba(120,140,180,.4)');ctx.strokeStyle='rgba(120,140,180,.25)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo((d[0][0]+d[3][0])/2,(d[0][1]+d[3][1])/2);ctx.lineTo((d[1][0]+d[2][0])/2,(d[1][1]+d[2][1])/2);ctx.stroke()}
+  if(G.showPaths&&t.walk>0){var a=Math.min(.55,t.walk/40);poly(d,'rgba(217,83,79,'+a+')')}
+  if(VH>.12&&(x===0||y===0||x===N-1||y===N-1)){var q=[iso(x,y),iso(x+1,y),iso(x+1,y+1),iso(x,y+1)],nb=[[0,-1],[1,0],[0,1],[-1,0]];
+    for(var e=0;e<4;e++){if(inB(x+nb[e][0],y+nb[e][1]))continue;var p0=q[e],p1=q[(e+1)%4],my=(p0.y+p1.y)/2;if(my<=c.y+.5)continue;poly([[p0.x,p0.y],[p1.x,p1.y],[p1.x,p1.y+14*VH],[p0.x,p0.y+14*VH]],(p0.x+p1.x)/2<c.x?'#b9c6dd':'#cfd9ea')}}
+}
+function drawWall(x,y){var c=iso(x+.5,y+.5);var t=block(c.x,c.y,1,30,'#aab4c4','#7f8ca3','#919db1');ctx.strokeStyle='rgba(60,70,95,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(t[3][0],t[3][1]+8*VH);ctx.lineTo(t[2][0],t[2][1]+8*VH);ctx.lineTo(t[1][0],t[1][1]+8*VH);ctx.moveTo(t[3][0],t[3][1]+18*VH);ctx.lineTo(t[2][0],t[2][1]+18*VH);ctx.lineTo(t[1][0],t[1][1]+18*VH);ctx.stroke()}
+function drawPartition(b){var c=iso(b.x+.5,b.y+.5);shadow(c,.8);block(c.x,c.y,.92,14,'#cfd9ea','#aab9d2','#bcc9df');lblock(c.x,c.y,.92,14,21,'rgba(191,227,255,.55)','rgba(143,199,255,.5)','rgba(160,210,255,.5)');if(G.sel===b.id){poly(dia(c.x,c.y,1,0),null,'#3b6cf0')}}
+function drawPlanter(x,y){var c=iso(x+.5,y+.5);shadow(c,.5);var pb=cyl(c.x,c.y,.2,10,'#d9a07a','#b8805a','#c58f68');ctx.strokeStyle='#2f9e7a';ctx.lineWidth=1;
+  [[-9,16,'#7fd1a1'],[8,18,'#6cc591'],[0,24,'#8fdcb0'],[-4,12,'#6cc591'],[5,10,'#7fd1a1']].forEach(function(q){ctx.fillStyle=q[2];ctx.beginPath();ctx.ellipse(c.x+q[0]*.6,pb-q[1]*VH*.6-2,5,9*VH+2,q[0]*.05,0,Math.PI*2);ctx.fill();ctx.stroke()})}
+function monitor(cx,cy,h,col){ctx.fillStyle='#55627a';ctx.fillRect(cx-1,cy-h*VH-6,2,6*VH+1);ctx.fillStyle=col||'#bfe3ff';ctx.strokeStyle=EDGE;ctx.lineWidth=1;ctx.fillRect(cx-7,cy-h*VH-14*VH-2,14,9*VH+2);ctx.strokeRect(cx-7,cy-h*VH-14*VH-2,14,9*VH+2)}
+function chair(cx,cy,col){ctx.fillStyle=col;ctx.strokeStyle=EDGE;ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(cx,cy,5,2.6,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillRect(cx-4.5,cy-8*VH-2,9,5*VH+2);ctx.strokeRect(cx-4.5,cy-8*VH-2,9,5*VH+2)}
+function trayStack(x,y,n,hot){for(var i=0;i<Math.min(n,8);i++){ctx.fillStyle=i%2?'#ffe9a8':'#ffdf85';ctx.strokeStyle='#8a7a52';ctx.lineWidth=.8;ctx.beginPath();ctx.rect(x-6,y-i*2.2*VH-2,12,2.2);ctx.fill();ctx.stroke()}
+  if(n>0){ctx.font='700 9px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.fillStyle=hot?'#d9534f':'#27334d';ctx.fillText(n,x,y-Math.min(n,8)*2.2*VH-6)}}
+function drawBuilding(b){
+  var c=iso(b.x+.5,b.y+.5),cx=c.x,cy=c.y,top=cy-36,d=BT[b.type],col=d.worker?ROLES[d.worker].col:'#8a9bb8',pale=d.worker?ROLES[d.worker].hat:'#dfe6f0';
+  switch(b.type){
+    case 'intake':case 'issue':{shadow(c,.8);block(cx,cy,.82,12,b.type==='intake'?'#9fd0ff':'#bfe6d6',b.type==='intake'?'#6fb4f5':'#8fd0b8',b.type==='intake'?'#7cbdf7':'#a6dcc6');faceR(cx,cy,.82,.1,.9,3,9,'#ffffff');
+      var sg=lblock(cx,cy,.3,22,30,'#ffffff','#e6edf9','#f2f6fc');ctx.strokeStyle='#8a9bb8';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(cx,cy-12*VH);ctx.lineTo(cx,cy-22*VH);ctx.stroke();icon(b.type==='intake'?'person':'permit',cx,cy-26*VH,13);
+      trayStack(cx+12,cy-12*VH-2,b.tray.length,b.tray.length>=TRAY);top=cy-30*VH-8;break}
+    case 'records':case 'cashier':case 'review':case 'eng':{shadow(c,.72);block(cx,cy,.74,10,'#d9b48f','#b8906a','#c9a07a');monitor(cx-5,cy-1,10,b.ctq?'#dcd6ff':'#bfe3ff');chair(cx+4,cy+9,pale);
+      if(b.type==='records'){lblock(cx-14,cy+2,.22,0,18,'#a9b7cc','#8a9bb8','#9aa9bf')}if(b.type==='cashier'){ctx.fillStyle='#bfe6d6';ctx.strokeStyle=EDGE;ctx.fillRect(cx+6,cy-10*VH-6,9,5*VH+1);ctx.strokeRect(cx+6,cy-10*VH-6,9,5*VH+1)}
+      if(b.ctq){ctx.fillStyle='#ffffff';ctx.strokeStyle=EDGE;ctx.fillRect(cx+6,cy-10*VH-7,8,6*VH+1);ctx.strokeRect(cx+6,cy-10*VH-7,8,6*VH+1);ctx.strokeStyle='#6c5ce7';ctx.beginPath();ctx.moveTo(cx+7.5,cy-10*VH-5);ctx.lineTo(cx+12.5,cy-10*VH-5);ctx.moveTo(cx+7.5,cy-10*VH-3);ctx.lineTo(cx+11.5,cy-10*VH-3);ctx.stroke()}
+      trayStack(cx+13,cy-10*VH+1,b.tray.length,b.tray.length>=TRAY);
+      if(b.ctq&&b.pts.length){var M=CTQ[b.type],last=b.pts[b.pts.length-1],bad=Math.abs(last-M.target)>M.tol;ctx.fillStyle=bad?'#d9534f':'#2f9e7a';ctx.beginPath();ctx.arc(cx-12,cy-14*VH-10,3,0,Math.PI*2);ctx.fill()}
+      if(b.down>0){icon('wait',cx,cy-28,14)}top=cy-26;break}
+    case 'signoff':{shadow(c,.9);block(cx,cy,.9,4,'#e6edf9','#cfd9ea','#dde7f6');var gl=lblock(cx,cy,.9,4,24,'rgba(191,227,255,.25)','rgba(191,227,255,.55)','rgba(191,227,255,.4)');
+      block(cx,cy+2,.46,9,'#8a6b5a','#6b4f40','#7a5b4a');monitor(cx-4,cy+1,9,'#bfe6d6');chair(cx+6,cy+9,'#2f9e7a');ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(cx+8,cy-9*VH-4,2.2,0,Math.PI*2);ctx.fill();
+      trayStack(cx+14,cy-9*VH+2,b.tray.length,b.tray.length>=TRAY);if(b.meetIn<10&&b.meetIn>0){icon('meeting',cx,cy-30,13)}top=cy-28;break}
+    case 'mailroom':{shadow(c,.8);block(cx,cy,.84,8,'#dfe6f0','#bfcbdc','#cfd9ea');[[-10,-6],[2,-10],[-2,0]].forEach(function(q,i){lblock(cx+q[0],cy+q[1],.26,8,16+i*3,'#e6edf9','#cfd9ea','#dde7f6')});
+      ctx.fillStyle='#ffffff';ctx.strokeStyle=EDGE;[[-12,-14],[-4,-18],[6,-14]].forEach(function(q){ctx.fillRect(cx+q[0],cy+q[1]*VH-6,10,6);ctx.strokeRect(cx+q[0],cy+q[1]*VH-6,10,6);ctx.beginPath();ctx.moveTo(cx+q[0],cy+q[1]*VH-6);ctx.lineTo(cx+q[0]+5,cy+q[1]*VH-2);ctx.lineTo(cx+q[0]+10,cy+q[1]*VH-6);ctx.stroke()});
+      trayStack(cx+14,cy-8*VH+2,b.tray.length,false);top=cy-30;break}
+    case 'copier':{shadow(c,.55);block(cx,cy,.5,14,'#eef2f8','#c9d3e3','#dbe3ef');lblock(cx,cy,.36,14,18,'#ffffff','#dbe3ef','#e9eef6');ctx.fillStyle=b.user?'#2f9e7a':'#9fb0bc';ctx.beginPath();ctx.arc(cx+8,cy-8*VH,1.8,0,Math.PI*2);ctx.fill();
+      if(b.user){var ph=(G.anim*2)%1;ctx.fillStyle='rgba(255,255,255,'+(1-ph)+')';ctx.fillRect(cx-5,cy-18*VH-4-ph*8,10,2)}top=cy-24;break}
+    case 'fileroom':{shadow(c,.85);block(cx,cy,.88,6,'#dfe6f0','#bfcbdc','#cfd9ea');[[-12,-4],[0,-9],[12,-4],[-6,2],[6,2]].forEach(function(q){lblock(cx+q[0],cy+q[1],.22,6,28,'#a9b7cc','#8a9bb8','#9aa9bf')});
+      var lost=b.tray.filter(function(f){return f.stage==='lost'}).length,found=b.tray.filter(function(f){return f.stage==='found'}).length;if(lost)icon('wait',cx,cy-34,13);if(found)icon('folder',cx+14,cy-30,13);top=cy-34;break}
+    case 'meeting':{shadow(c,.9);block(cx,cy,.9,3,'#e6edf9','#cfd9ea','#dde7f6');ctx.fillStyle='#d9b48f';ctx.strokeStyle=EDGE;ctx.beginPath();ctx.ellipse(cx,cy-8*VH,16,8*GRY/GRX*1.1+2,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#b8906a';ctx.beginPath();ctx.ellipse(cx,cy-8*VH+2,16,8*GRY/GRX*1.1+2,0,0,Math.PI,false);ctx.fill();
+      [[-16,4],[16,4],[0,12],[0,-10]].forEach(function(q){chair(cx+q[0]*.9,cy+q[1]*.8,'#8fc7ff')});top=cy-24;break}
+    case 'coffee':{shadow(c,.55);block(cx,cy,.5,10,'#d9b48f','#b8906a','#c9a07a');ctx.fillStyle='#ffffff';ctx.strokeStyle=EDGE;ctx.fillRect(cx-4,cy-10*VH-9,8,8*VH+1);ctx.strokeRect(cx-4,cy-10*VH-9,8,8*VH+1);ctx.fillStyle='#8a6b5a';ctx.fillRect(cx-2.5,cy-10*VH-9,5,2);
+      for(var sN=0;sN<2;sN++){var ph2=(G.anim*.7+sN/2)%1;ctx.fillStyle='rgba(255,255,255,'+(.7-ph2*.7)+')';ctx.beginPath();ctx.arc(cx+Math.sin(ph2*5+sN)*2,cy-10*VH-12-ph2*12,2+ph2*2,0,Math.PI*2);ctx.fill()}top=cy-26;break}
+    case 'door':{block(cx,cy,.92,3,'#e6edf9','#cfd9ea','#dde7f6');var dr=dia(cx,cy,.9,3);poly([dr[0],dr[1],[dr[1][0],dr[1][1]-26*VH],[dr[0][0],dr[0][1]-26*VH]],'rgba(143,199,255,.55)',EDGE);ctx.strokeStyle=EDGE;ctx.beginPath();ctx.moveTo((dr[0][0]+dr[1][0])/2,(dr[0][1]+dr[1][1])/2);ctx.lineTo((dr[0][0]+dr[1][0])/2,(dr[0][1]+dr[1][1])/2-26*VH);ctx.stroke();
+      ctx.fillStyle='#d9534f';ctx.fillRect(cx-8,cy-28*VH-6,16,5);ctx.fillStyle='#fff';ctx.font='700 4px Nunito';ctx.textAlign='center';ctx.fillText('PERMITS',cx,cy-28*VH-2);
+      poly(dia(cx+6,cy+3,.4,0),'#b9c6dd');top=cy-36;break}
+  }
+  if(b.step&&G.sel===b.id){poly(dia(cx,cy,1,0),null,'#3b6cf0');ctx.lineWidth=2;ctx.stroke()}
+  if(G.alarms&&G.alarms[b.id])icon('alarm',cx+16,top-2,14);
+  var w=G.W.filter(function(x){return x.home===b.id})[0];
+  if(w&&!w.task&&w.wait&&/full|busy|batch/i.test(w.wait)&&!w.moving)icon('wait',cx-16,top-2,13);
+}
+function drawWorker(w){
+  var p=iso(w.x,w.y),bob=w.moving?Math.abs(Math.sin(G.anim*12+w.id))*2:0,R=ROLES[w.role],x=p.x,r=w.role;
+  ctx.fillStyle='rgba(40,50,80,.18)';ctx.beginPath();ctx.ellipse(x,p.y,6,2.6,0,0,Math.PI*2);ctx.fill();
+  var y=p.y-bob,INK='#4a5570';ctx.strokeStyle=INK;ctx.lineWidth=2;var st=w.moving?Math.sin(G.anim*12+w.id)*2.5:0;
+  ctx.beginPath();ctx.moveTo(x-2,y-6);ctx.lineTo(x-2-st,y);ctx.moveTo(x+2,y-6);ctx.lineTo(x+2+st,y);ctx.stroke();ctx.lineWidth=1;
+  /* body */
+  ctx.fillStyle=R.col;ctx.beginPath();ctx.moveTo(x-5,y-5);ctx.lineTo(x+5,y-5);ctx.lineTo(x+4,y-14);ctx.lineTo(x-4,y-14);ctx.closePath();ctx.fill();ctx.stroke();
+  if(r==='clerk'){ctx.strokeStyle='#ffd36e';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x-2.5,y-14);ctx.lineTo(x,y-8);ctx.lineTo(x+2.5,y-14);ctx.stroke();ctx.fillStyle='#fff';ctx.fillRect(x-2,y-8.5,4,3);ctx.strokeStyle=INK;ctx.lineWidth=1}
+  if(r==='planner'){ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(x-1.5,y-14);ctx.lineTo(x+1.5,y-14);ctx.lineTo(x+1.5,y-6);ctx.lineTo(x-1.5,y-6);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(x-4,y-9,1.1,0,Math.PI*2);ctx.arc(x-4,y-12,1.1,0,Math.PI*2);ctx.fill()}
+  if(r==='engineer'){ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(x-1.8,y-14);ctx.lineTo(x+1.8,y-14);ctx.lineTo(x,y-7);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#27334d';ctx.beginPath();ctx.moveTo(x-1.2,y-13.5);ctx.lineTo(x+1.2,y-13.5);ctx.lineTo(x,y-8);ctx.closePath();ctx.fill();ctx.fillStyle='#ffffff';ctx.strokeStyle='#27334d';ctx.fillRect(x+3,y-12,4,5);ctx.strokeRect(x+3,y-12,4,5);ctx.strokeStyle=INK}
+  if(r==='supervisor'){ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(x-3,y-14);ctx.lineTo(x+3,y-14);ctx.lineTo(x,y-9);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#d9534f';ctx.beginPath();ctx.moveTo(x-1,y-13.5);ctx.lineTo(x+1,y-13.5);ctx.lineTo(x,y-7);ctx.closePath();ctx.fill();ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(x+6,y-8,2.2,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#2f9e7a';ctx.beginPath();ctx.arc(x+8.3,y-8,1.2,-Math.PI/2,Math.PI/2);ctx.stroke();ctx.strokeStyle=INK}
+  /* head */
+  ctx.fillStyle='#ffe0c4';ctx.beginPath();ctx.arc(x,y-19.5,5.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+  var hair={clerk:'#6b4a3a',planner:'#2b2b3a',engineer:'#8a5a2a',supervisor:'#6d6d7a'}[r];ctx.fillStyle=hair;ctx.beginPath();ctx.arc(x,y-20.5,5.5,Math.PI*1.05,Math.PI*1.95);ctx.fill();
+  if(r==='supervisor'){ctx.fillStyle='#ffe0c4';ctx.beginPath();ctx.arc(x,y-22,3,Math.PI*1.1,Math.PI*1.9);ctx.fill()}
+  face(x,y-20,2);
+  if(r==='planner'||r==='engineer'){ctx.strokeStyle='#27334d';ctx.lineWidth=.8;ctx.beginPath();ctx.arc(x-2,y-20,2,0,Math.PI*2);ctx.moveTo(x+4,y-20);ctx.arc(x+2,y-20,2,0,Math.PI*2);ctx.stroke();ctx.lineWidth=1;ctx.strokeStyle=INK}
+  if(r==='clerk'){ctx.strokeStyle='#27334d';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,y-20.5,6,Math.PI*1.1,Math.PI*1.9);ctx.stroke();ctx.fillStyle='#27334d';ctx.beginPath();ctx.arc(x-5.5,y-18.5,1.6,0,Math.PI*2);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=1}
+  if(w.skill>0){ctx.fillStyle=w.skill>1?'#ffd36e':'#ffffff';ctx.beginPath();ctx.arc(x+5,y-11,2,0,Math.PI*2);ctx.fill();ctx.stroke()}
+  if(w.carry){icon('folder',x+(w.face>0?7:-7),y-30,14);if(w.carryN>1){ctx.font='700 9px "JetBrains Mono",monospace';ctx.fillStyle='#27334d';ctx.textAlign='center';ctx.fillText('×'+w.carryN,x+(w.face>0?17:-17),y-27)}}
+  else if(!w.task&&/full|busy|batch|coach/i.test(w.wait)){icon('wait',x,y-34,13)}
+  if(w.task&&w.task.brk){icon('coffee',x,y-34,13)}if(w.task&&w.task.meet){icon('meeting',x,y-34,13)}
+}
+function drawApplicant(f,i){
+  var door=G.B.filter(function(b){return b.type==='door'})[0];if(!door)return;var p=iso(door.x+1.1+(i%4)*.55,door.y+.3+Math.floor(i/4)*.5+(i%2)*.15),x=p.x,y=p.y;
+  ctx.fillStyle='rgba(40,50,80,.15)';ctx.beginPath();ctx.ellipse(x,y,5,2.2,0,0,Math.PI*2);ctx.fill();
+  var cols=['#f3a3a0','#ffd36e','#8fd3ff','#7fd1a1','#c9a9f5'],col=cols[f.id%cols.length];
+  ctx.strokeStyle='#4a5570';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-1.5,y-5);ctx.lineTo(x-1.5,y);ctx.moveTo(x+1.5,y-5);ctx.lineTo(x+1.5,y);ctx.stroke();ctx.lineWidth=1;
+  ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y-4);ctx.lineTo(x+3,y-12);ctx.lineTo(x-3,y-12);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ffe0c4';ctx.beginPath();ctx.arc(x,y-16.5,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();face(x,y-17,1.6);
+  icon('file',x+6,y-24,10);
+  var age=G.t-f.born;if(age>WALKOUT*.6){ctx.fillStyle='#d9534f';ctx.font='700 9px Nunito';ctx.textAlign='center';ctx.fillText('!',x,y-26)}
+}
+function drawTrails(){
+  var cols={clerk:'#3b6cf0',planner:'#6c5ce7',engineer:'#e0a21b',supervisor:'#2f9e7a'};ctx.lineWidth=1.6;ctx.lineJoin='round';
+  G.W.forEach(function(w){if(!w.trail||w.trail.length<2)return;ctx.strokeStyle=cols[w.role];ctx.globalAlpha=.75;ctx.beginPath();w.trail.forEach(function(p,i){var q=iso(p.x,p.y);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.stroke()});ctx.globalAlpha=1;
+}
+function draw(){
+  ctx.clearRect(0,0,CW,CH);
+  var order=[];for(var y=0;y<N;y++)for(var x=0;x<N;x++)order.push([x,y]);
+  order.sort(function(a,b){return dk(a[0],a[1])-dk(b[0],b[1])}).forEach(function(p){drawFloor(p[0],p[1])});
+  if(G.hover&&G.phase==='run'){var h=G.hover,hc=iso(h.x+.5,h.y+.5);poly(dia(hc.x,hc.y,1,0),'rgba(59,108,240,.15)','#3b6cf0')}
+  if(G.showPaths)drawTrails();
+  var objs=[];
+  for(var y2=0;y2<N;y2++)for(var x2=0;x2<N;x2++){var t=G.tiles[y2][x2];if(t.k==='plant')objs.push({d:dk(x2,y2),f:drawPlanter.bind(null,x2,y2)});if(t.k==='wall')objs.push({d:dk(x2,y2),f:drawWall.bind(null,x2,y2)});if(t.b){var b=G.bmap[t.b];if(b.type==='partition')objs.push({d:dk(x2,y2),f:drawPartition.bind(null,b)});else if(b.type!=='hall')objs.push({d:dk(x2,y2)+(b.type==='door'?-.2:0),f:drawBuilding.bind(null,b)})}}
+  G.W.forEach(function(w){objs.push({d:dk(w.x,w.y)+.02,f:drawWorker.bind(null,w)})});
+  G.queue.forEach(function(f,i){var door=G.B.filter(function(b){return b.type==='door'})[0];if(door)objs.push({d:dk(door.x+1.1+(i%4)*.55,door.y+.3)+.03,f:drawApplicant.bind(null,f,i)})});
+  objs.sort(function(a,b){return a.d-b.d}).forEach(function(o){o.f()});
+  if(G.tool!=='select'&&G.tool!=='bulldoze'&&G.hover&&G.phase==='run'){var err=placeErr(G.tool,G.hover.x,G.hover.y),gc=iso(G.hover.x+.5,G.hover.y+.5);poly(dia(gc.x,gc.y,1,0),err?'rgba(217,83,79,.25)':'rgba(47,158,122,.25)',err?'#d9534f':'#2f9e7a')}
+}
+
+/* ================= HUD, panels, map UI ================= */
+function updHud(){
+  var s=G.stats,dp=s.opps?s.def/s.opps*1e6:0,sig=sigmaOf(dp,s.opps);
+  $('#hShift').textContent=String(G.shift);$('#hTime').textContent=G.phase==='review'?'Break':fmtT(G.t);
+  var bs=$('.brand span'),bt='Cut the approval cycle time';if(bs.textContent!==bt)bs.textContent=bt;
+  var scv=projectScore(),bc=baseCycle();$('#hSpent').textContent=Math.round(G.impSpend);$('#hScore').textContent=scv==null?'–':(scv>0?'+':'')+scv;$('#hScore').className=scv!=null&&scv<0?'neg':'';$('#hBase').textContent=bc==null?'–':fmtT(bc);
+  $('#hDef').textContent=s.def;$('#hIssued').textContent=s.issued;$('#hLate').textContent=s.late;var pt=permitTimes();$('#hCycle').textContent=pt.n?fmtT(pt.mean)+' / '+fmtT(pt.median):'–';$('#hRework').textContent=fmtT(s.wasteT);
+  var be=$('#bEnd');be.hidden=G.phase!=='run';if(G.endArm&&G.anim>G.endArm)G.endArm=0;var btx=G.endArm?'Confirm: end shift now':'End shift & review';if(be.textContent!==btx)be.textContent=btx;be.classList.toggle('primary',!!G.endArm);
+  var bp=$('#bPause');bp.textContent=G.phase==='review'?'Start shift '+(G.shift+1):(G.paused?'Resume':'Pause');bp.disabled=G.phase==='intro';
+  $$('#speeds [data-speed]').forEach(function(b){b.classList.toggle('on',+b.dataset.speed===G.speed)});$('#bPaths').classList.toggle('on',G.showPaths);$('#bPaths').setAttribute('aria-pressed',String(G.showPaths));$('#legend').hidden=!G.showPaths;
+}
+function togglePause(){if(G.phase==='review'){G.shift++;startShift();return}if(G.phase!=='run')return;G.paused=!G.paused;updHud()}
+/* ---- build palette ---- */
+var flyCat=null;
+function renderDock(){
+  var items=[['select','Select','select'],['hall','Aisle','hall'],['Desks','Desks','desk'],['Equipment','Equipment','copier'],['bulldoze','Demolish','bulldoze']];
+  var html=items.map(function(it){var on=(it[0]===G.tool&&!flyCat)||(flyCat===it[0])||(CATS.indexOf(it[0])>=0&&BT[G.tool]&&BT[G.tool].cat===it[0]&&!flyCat);return '<button type="button" data-dock="'+it[0]+'" class="'+(on?'on':'')+'">'+ic(it[2])+it[1]+'</button>'}).join('');
+  var d=$('#dock');if(d.innerHTML!==html)d.innerHTML=html;
+  var fly=$('#fly');if(!flyCat){fly.hidden=true;return}
+  var fh=Object.keys(BT).filter(function(k){return BT[k].cat===flyCat}).map(function(k){var dd=BT[k];return '<button type="button" data-ftool="'+k+'"'+(capital()<dd.cost?' disabled title="Not enough '+capName()+'"':'')+' class="'+(G.tool===k?'on':'')+'">'+dd.name+'<small>'+dd.cost+' coins</small></button>'}).join('');
+  if(fly.innerHTML!==fh)fly.innerHTML=fh;fly.hidden=false;
+}
+function setTool(t){G.tool=t;flyCat=null;closeCtx();G.dirty.panel=true;renderDock();var tip={select:'Click a desk to see its worker, in-tray and control chart. Right-click any tile for build options.',bulldoze:'Click a desk, item or partition wall to demolish it for half its cost. Files in its in-tray move to another desk of the same kind.',hall:'Click or drag across the floor to lay a kept-clear aisle (5 coins a tile).',partition:'Click a tile to put up a partition wall (20 coins). Staff have to walk round it.'}[t];hint(tip||('Click a tile to place a '+BT[t].name.toLowerCase()+' ('+BT[t].cost+' coins). Desks need an aisle beside them.'))}
+function renderPanel(force){
+  var tab=$('.tabs .btn.on').dataset.tab;
+  var key=tab+'|'+G.tool+'|'+G.W.map(function(w){return w.id+':'+w.skill}).join(',')+'|'+Object.keys(G.up).join(',')+'|'+G.shift+'|'+G.phase+'|'+G.hist.length+'|'+Math.floor(capital()/5);
+  if(!force&&key===inspKey)return;inspKey=key;
+  $('#pBuild').hidden=tab!=='build';$('#pCrew').hidden=tab!=='crew';$('#pImprove').hidden=tab!=='improve';
+  if(tab==='build'){var h='<div class="pal"><button type="button" class="tool'+(G.tool==='select'?' on':'')+'" data-tool="select">'+ic('select')+'<span><b>Select</b><small>Inspect</small></span></button><button type="button" class="tool'+(G.tool==='bulldoze'?' on':'')+'" data-tool="bulldoze">'+ic('bulldoze')+'<span><b>Demolish</b><small>50% back</small></span></button>';
+    CATS.forEach(function(c){h+='<h3>'+c+'</h3>';Object.keys(BT).forEach(function(k){var d=BT[k];if(d.cat!==c)return;h+='<button type="button" class="tool'+(G.tool===k?' on':'')+'" data-tool="'+k+'"'+(capital()<d.cost?' disabled':'')+'>'+ic(d.icon)+'<span><b>'+d.name+'</b><small>'+d.cost+' coins</small></span></button>'})});
+    h+='</div><div class="note"><b>'+(BT[G.tool]?BT[G.tool].name:G.tool==='select'?'Select':'Demolish')+'.</b> '+(BT[G.tool]?BT[G.tool].desc:G.tool==='select'?'Click a desk for its status, in-tray and control chart. Right-click any tile for build options.':'Demolishes a desk, item or partition wall for half its cost. The public entrance and the concrete core stay.')+'</div>';$('#pBuild').innerHTML=h}
+  if(tab==='crew')renderCrew();
+  if(tab==='improve')renderImprove();
+}
+function renderCrew(){
+  var el=elapsed();var h='<div class="crew">'+ROLE_ORDER.map(function(r){var ws=G.W.filter(function(w){return w.role===r});if(!ws.length)return '';return ws.map(function(w){var b=G.bmap[w.home],util=w.S.busyT/el,walk=w.S.busyT?w.S.walkT/w.S.busyT:0;
+    return '<div class="wk"><div class="av" style="background:'+ROLES[r].col+'">'+w.name.charAt(0)+'</div><div><b>'+w.name+'</b> <small style="display:inline">'+ROLES[r].name+' · '+SKILL[w.skill]+' · '+(b?b.name:'no desk')+'</small><small>'+(w.task?w.task.label:(w.wait||'Idle'))+'</small><div class="meter" title="busy share"><i style="width:'+Math.round(util*100)+'%"></i></div><small>Busy '+pct(util)+' · walking '+pct(walk)+' of busy time</small></div>'+(w.skill<2?'<button type="button" class="btn small" data-train="'+w.id+'"'+(capital()<TRAIN_COST[w.skill]?' disabled':'')+'>Train · '+TRAIN_COST[w.skill]+'</button>':'<span class="kicker">Expert</span>')+'</div>'}).join('')}).join('')+'</div>';
+  h+='<div class="note">Every desk comes with its own worker; remove the desk and the worker goes too. Training makes a worker faster, steadier and less error-prone ('+SKILL.join(' → ')+').</div>';
+  $('#pCrew').innerHTML=h;
+}
+var CAUSES=[
+ {c:'Applications arrive incomplete and nobody notices until plan review',ups:['checklist','eforms']},
+ {c:'The permit software is old and slow',ups:['newsys']},
+ {c:'The supervisor signs permits in batches',ups:['delegate']},
+ {c:'Files get lost in the file room',ups:['fives','tracker']},
+ {c:'Staff are not motivated',ups:['morale']},
+ {c:'The layout makes people walk too far',how:'No purchase here. Use Walking paths to see the routes, then move desks, partition walls, the copier, the mail room and the file room with the build tools. Each move is counted in your spend.'},
+ {c:'The supervisor is away in meetings too often',ups:['meetfree']},
+ {c:'Applicants do not read the instructions',ups:['notice']},
+ {c:'Fees are worked out by hand and are sometimes wrong',ups:['feecalc']},
+ {c:'Reviewers tire and their work drifts during the shift',ups:['huddle','alarms']},
+ {c:'There are too many types of permit',ups:['teams']},
+ {c:'Every reviewer reviews in their own way',ups:['stdrev']},
+ {c:'There are not enough desks and staff',how:'No purchase here. Add a second desk of any kind with the build tools. Each desk comes with its own worker and its cost is counted in your spend.'},
+ {c:'Applicants arrive in bursts',ups:['appt']},
+ {c:'Staff computers are too slow',ups:['pcs']},
+ {c:'Clerks only work at their own desk',ups:['crosstrain']},
+ {c:'Staff are not trained well enough',how:'No purchase here. Train any worker from the Crew tab. The training cost is counted in your spend.'},
+ {c:'Files are carried by hand from desk to desk',ups:['eflow']}
+];
+function upById(id){return UPS.filter(function(u){return u.id===id})[0]}
+function renderImprove(){
+  var h='<div class="budgetbox"><div><span class="kicker">Spent so far</span><b>'+Math.round(G.impSpend)+' coins</b></div><p>This is what people in the office say is wrong. Some of it is true and some of it is not. Check each one against your own data before you pay for a fix. There is no budget limit, but every coin counts against your score.</p></div><ul class="ups">';
+  CAUSES.forEach(function(c){
+    h+='<li class="up"><div class="uph"><span class="ph">Suspected cause</span></div><b>'+c.c+'</b>';
+    if(c.ups)c.ups.forEach(function(id){var u=upById(id),owned=!!G.up[id];h+='<p style="margin-top:8px"><b style="font-size:12.5px;color:var(--ink)">'+u.name+'.</b> '+u.desc+'</p><button type="button" class="btn small" data-up="'+id+'"'+(owned?' disabled':'')+'>'+(owned?'In place':'Implement · '+u.cost+' coins')+'</button>'});
+    else h+='<p style="margin-top:6px">'+c.how+'</p>';
+    h+='</li>'});
+  $('#pImprove').innerHTML=h+'</ul>';
+}
+var VERDICT={};
+/* ---- error log: real errors from the simulation plus small everyday annoyances ---- */
+var ERR_NAME={misfile:['File mis-filed and lost','Records desk'],fee:['Fee miscalculated','Cashier window'],unsigned:['Page left unsigned','Supervisor’s office'],review:['Review missed something and was redone','Plan review desk'],eng:['Calculation error, check redone','Engineering desk'],incomplete:['Incomplete application found at review','Plan review desk']};
+var DECOYS=[{n:'Permit software slow to respond',every:35,lo:1,hi:3,fix:'newsys'},{n:'Computer froze and was restarted',every:160,lo:3,hi:6,fix:'pcs'},{n:'Applicant asked a question the instructions answer',every:55,lo:2,hi:4,at:'intake',fix:'notice'},{n:'Permit type looked up in the manual',every:80,lo:2,hi:4,fix:'teams'},{n:'Staff member late back from a break',every:180,lo:3,hi:8,fix:'morale'}];
+function logErr(f,sec,where){var e=ERR_NAME[where];if(!e)return;if(where==='misfile')sec=BT.records.work+(G.up.tracker?10:(G.up.fives?SEARCH_T/3:SEARCH_T));if(where==='incomplete')sec+=5;G.errLog.push({shift:G.shift,t:G.t,type:e[0],where:e[1],file:f.name,src:SOURCES[f.src].name,sec:sec})}
+function decoyTick(dt){DECOYS.forEach(function(d,i){G.dz[i]-=dt;if(G.dz[i]>0)return;G.dz[i]=d.every*(.5+Math.random());if(G.up[d.fix])return;var desks=G.B.filter(function(b){return b.step&&(!d.at||b.step===d.at)});if(!desks.length)return;var b=desks[rint(0,desks.length-1)];G.errLog.push({shift:G.shift,t:G.t,type:d.n,where:b.name,file:'',src:'',sec:rint(d.lo,d.hi)})})}
+var ERR_HEAD=['Shift','Time','Error','Where','Permit','Source','Time lost (s)'];
+function errRows(){return G.errLog.map(function(e){return [e.shift,(e.t<0?'-':'')+fmtT(Math.abs(e.t)),e.type,e.where,e.file,e.src,Math.round(e.sec)]})}
+function tsv2csv(t){return t.split('\n').map(function(l){return l.split('\t').map(function(v){return /[",]/.test(v)&&v.charAt(0)!=='"'?'"'+v.replace(/"/g,'""')+'"':v}).join(',')}).join('\r\n')}
+function saveFile(name,data,mime){if(!data){hint('Nothing to save yet.',true);return}
+  var blob=new Blob([data],{type:mime||'text/csv'});
+  var fallback=function(){var ok=false;try{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();ok=true}catch(e){}hint(ok?'If no file was saved, open Process data and use Copy for Excel.':'Could not save a file here. Open Process data and use Copy for Excel.')};
+  try{if(window.claude&&window.claude.use){window.claude.use('downloads').then(function(d){if(!d){fallback();return}d.save({filename:name,data:blob}).then(function(){hint('Saved '+name+'.')},function(err){hint(err&&err.code==='declined'?'Download cancelled.':'Could not save the file. Open Process data and use Copy for Excel.',true)})},fallback)}else fallback()}catch(e){fallback()}}
+/* ---- one-click snapshot of everything measured so far ---- */
+function snapSheets(){
+  var sum=summarize(),pt=sum.pt,bc=baseCycle(),sc=projectScore(),r1=function(v){return Math.round(v*10)/10},el=elapsed();
+  var S=[['Summary',[['Measure','Value','Note'],['Shift',G.shift,''],['Shift time (s)',Math.round(G.t),''],['Average cycle time this shift (s)',pt.n?r1(pt.mean):'','complete request to signed permit'],['Median cycle time this shift (s)',pt.n?r1(pt.median):'',''],['Baseline average cycle time (s)',bc==null?'':r1(bc),'everything before your first change, including shift 0'],['Permits issued this shift',sum.issued,''],['Outside service standard this shift',sum.late,''],['Files still open',pt.openN,''],['Rework time this shift (s)',Math.round(sum.wasteT),''],['Share of task time spent walking',r1(sum.walkShare*100)+'%',''],['Applicants lost this shift',sum.walkouts+sum.abandoned,'walked out or withdrew'],['Spent (coins)',Math.round(G.impSpend),''],['Score (coins)',sc==null?'':sc,'10 per second off the average cycle time, minus spend'],['About the times','','Seconds from the start of the shift. Shift 0 is the 30 minutes before you arrived, so its times are negative.']]]];
+  var ph=['Shift','Permit','Applicant','Source','Received (s)','Issued (s)','Cycle time (s)','Door to permit (s)','Service standard (s)','Status','Rework loops','Rework time (s)','Engineering'].concat(ST_KEYS.map(function(k){return 'Time: '+STEP_LABEL[k].toLowerCase()+' (s)'}));
+  S.push(['Permits issued',[ph].concat(G.fileLog.map(function(r){return [r.shift,r.name,r.who,SOURCES[r.src].name,Math.round(r.clock),Math.round(r.done),r1(r.lead),r1(r.gross),Math.round(r.sla),r.status,r.rework,Math.round(r.waste),r.eng?'yes':'no'].concat(ST_KEYS.map(function(k){return Math.round((r.st||{})[k]||0)}))}))]);
+  S.push(['Files still open',[['Permit','Applicant','Source','Where it is now','Time so far (s)','Service standard (s)','Rework loops']].concat(pt.rows.filter(function(r){return r.open}).map(function(r){return [r.name,r.who,SOURCES[r.src].name,r.state.replace('Open · ',''),r1(r.t),Math.round(r.sla),r.rework]}))]);
+  S.push(['Error log',[['Shift','Time (s)','Error','Where','Permit','Source','Time lost (s)']].concat(G.errLog.map(function(e){return [e.shift,Math.round(e.t),e.type,e.where,e.file,e.src,Math.round(e.sec)]}))]);
+  S.push(['Desks',[['Desk','Busy %','Idle %','Files done','In-tray now','Top idle reason']].concat(sum.stations.map(function(s){var why=Object.keys(s.why).sort(function(a,c){return s.why[c]-s.why[a]})[0];return [s.name,r1(s.util*100),r1(s.idle*100),s.runs,s.tray,why||'']}))]);
+  S.push(['Crew',[['Worker','Role','Skill','Desk','Busy %','Walking % of busy time','Idle %']].concat(G.W.map(function(w){var b=G.bmap[w.home];return [w.name,ROLES[w.role].name,SKILL[w.skill],b?b.name:'',r1(w.S.busyT/el*100),r1(w.S.busyT?w.S.walkT/w.S.busyT*100:0),r1(w.S.idleT/el*100)]}))]);
+  S.push(['Changes made',[['Shift','Minute','Change','Cost (coins)']].concat(G.imps.map(function(i){return [i.shift,r1(i.at.min),i.what,i.cost]}))]);
+  return S}
+function snapshot(){var S=snapSheets(),stamp='shift'+G.shift+'-'+fmtT(G.t).replace(':','m')+'s';
+  if(window.XLSX){try{var wb=XLSX.utils.book_new();S.forEach(function(s){XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s[1]),s[0])});saveFile('permit-office-'+stamp+'.xlsx',XLSX.write(wb,{bookType:'xlsx',type:'array'}),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');return}catch(e){}}
+  var q=function(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  saveFile('permit-office-'+stamp+'.csv',S.map(function(s){return q(s[0])+'\r\n'+s[1].map(function(r){return r.map(q).join(',')}).join('\r\n')}).join('\r\n\r\n'))}
+/* ---- voice of the customer: raw statements, unsorted ---- */
+var VOC=[['Homeowner','Comment card','Faster service. It just takes too long.'],['Contractor','Phone complaint','You need a proper online portal with tracking, like the courier companies have.'],['Homeowner','Survey','I need my permit within 3 minutes of handing in a complete application. My builder is booked and waiting.'],['Business owner','Letter','It should be free. I already pay taxes.'],['Contractor','Survey','Tell me within 1 minute of applying if anything is missing, so I can fix it while I am still there.'],['Homeowner','Comment card','The staff should be friendlier.'],['Department contact','Email','At least 9 out of 10 of our requests should be approved inside the 5 minute standard.'],['Business owner','Phone complaint','Hire more people at the counter.'],['Homeowner','Survey','I should not wait more than 1 minute at the door before someone serves me.'],['Contractor','Email','Contractors bring in most of your work. We should go to the front of the line.'],['Business owner','Letter','An application sent by post should take no longer than 4 minutes from the moment it arrives.'],['Homeowner','Comment card','I want my permit the moment I walk in.'],['Contractor','Survey','The fee I am charged must match the published fee schedule every time.'],['Department contact','Meeting notes','Get rid of the supervisor’s signature. Nobody needs it.'],['Homeowner','Phone complaint','Ask me for each document once. I was called back twice for papers I had already handed in.'],['Business owner','Survey','Just make it easy.'],['Contractor','Comment card','Open on Saturdays.'],['Homeowner','Email','Text me updates so I know what is going on.']];
+var VOC_HEAD=['#','Customer','How we heard it','What they said'];
+function vocRows(){return VOC.map(function(v,i){return [i+1,v[0],v[1],v[2]]})}
+/* ---- status card on the map ---- */
+function fileStatus(f){var age=G.t-f.born,left=f.sla-age;return STEP_LABEL[f.stage.replace('callbackwait','callback').replace('callbackdone','callback').replace('found','lost').replace('archive','issue')]+(f.rework?' · rework ×'+f.rework:'')+' · '+(left>0?fmtT(left)+' left':'late by '+fmtT(-left))}
+function renderTip(){
+  var tip=$('#tip');if(G.sel==null||G.phase!=='run'){tip.hidden=true;return}
+  var b=G.bmap[G.sel];if(!b){G.sel=null;tip.hidden=true;return}
+  var p=iso(b.x+.5,b.y+.5),w=G.W.filter(function(x){return x.home===b.id})[0],d=BT[b.type],el=elapsed(),body='';
+  var state=w?(w.task?w.task.label:(w.wait||'Idle')):'';
+  if(b.step){body='<div class="st">'+(state||'No worker')+'</div>';
+    if(w){body+='<div class="meter" title="busy share"><i style="width:'+Math.round(w.S.busyT/el*100)+'%"></i></div><div class="st">'+w.name+' ('+SKILL[w.skill]+') busy '+pct(w.S.busyT/el)+', walking '+pct(w.S.busyT?w.S.walkT/w.S.busyT:0)+' of that · '+b.S.runs+' done</div>'}
+    if(b.tray.length){body+='<div class="st" style="margin-top:4px">In-tray ('+b.tray.length+'/'+TRAY+'):</div>'+b.tray.slice(0,5).map(function(f){return '<div>'+ic('file')+' '+f.name+' — '+fileStatus(f)+'</div>'}).join('')+(b.tray.length>5?'<div class="st">… and '+(b.tray.length-5)+' more</div>':'')}else body+='<div class="st">In-tray empty</div>';
+    if(b.ctq){var M=CTQ[b.type],cap=capability(b);body+='<div style="margin-top:6px">'+controlChart(b,220,70)+'</div><div class="st">'+M.name+': target '+M.target+' ± '+M.tol+(cap?' · mean '+fx(cap.mean,1)+', Cp '+fx(cap.cp,2)+', Cpk '+fx(cap.cpk,2):' · fewer than 5 readings')+'</div><div class="acts"><button type="button" class="btn small" data-coach="'+b.id+'"'+(b.down>0?' disabled':'')+'>Coach · '+COACH_COST+' coins</button>'+(w&&w.skill<2?'<button type="button" class="btn small" data-train="'+w.id+'">Train · '+TRAIN_COST[w.skill]+'</button>':'')+'</div>'}
+    else if(w&&w.skill<2)body+='<div class="acts"><button type="button" class="btn small" data-train="'+w.id+'">Train · '+TRAIN_COST[w.skill]+'</button></div>';
+    if(b.type==='signoff'){body+='<div class="st">Next meeting in '+fmtT(Math.max(0,b.meetIn))+'. Batch size '+(G.up.delegate?1:BATCH)+'.</div>'}
+  }else if(b.type==='copier')body='<div class="st">'+(b.user?'In use':'Free')+' · copies take '+COPY_T+' s each</div>';
+  else if(b.type==='fileroom'){var lost=b.tray.filter(function(f){return f.stage==='lost'}).length,found=b.tray.filter(function(f){return f.stage==='found'}).length;body='<div class="st">'+b.archived+' files archived'+(lost?' · '+lost+' lost, being searched for':'')+(found?' · '+found+' found, waiting to be fetched':'')+'</div>'}
+  else if(b.type==='mailroom')body='<div class="st">'+b.tray.length+' application'+(b.tray.length===1?'':'s')+' waiting to be fetched · next bundle in '+fmtT(Math.max(0,G.next.mail))+'</div>';
+  else if(b.type==='partition')body='<div class="st">A movable partition. Remove it for 10 coins back, or build one elsewhere for 20.</div>';
+  else if(b.type==='door')body='<div class="st">'+G.queue.length+' waiting'+(G.queue.length?' · longest '+fmtT(G.t-G.queue[0].born):'')+' · next applicant in '+fmtT(Math.max(0,G.nextArr))+'</div>';
+  else body='<div class="st">'+d.desc+'</div>';
+  tip.innerHTML='<h4>'+b.name+'</h4>'+body;tip.hidden=false;
+  var r=cv.getBoundingClientRect(),sx=p.x*r.width/CW,sy=p.y*r.height/CH,tw=tip.offsetWidth||220,th=tip.offsetHeight||80;
+  tip.style.left=clamp(sx+24,6,r.width-tw-6)+'px';tip.style.top=clamp(sy-th/2-20,6,r.height-th-6)+'px';
+}
+function controlChart(b,W,H){var M=CTQ[b.type],pts=b.pts;if(!pts.length)return '<div class="st">No readings yet.</div>';var lo=M.target-M.tol*1.6,hi=M.target+M.tol*1.6,yv=function(v){return H-((clamp(v,lo,hi)-lo)/(hi-lo))*(H-8)-4},xs=function(i){return 6+i*(W-12)/Math.max(1,pts.length-1)};
+  var s='<svg class="chart" viewBox="0 0 '+W+' '+H+'"><rect x="0" y="'+yv(M.target+M.tol)+'" width="'+W+'" height="'+(yv(M.target-M.tol)-yv(M.target+M.tol))+'" fill="rgba(47,158,122,.12)"/><line x1="0" x2="'+W+'" y1="'+yv(M.target)+'" y2="'+yv(M.target)+'" stroke="#2f9e7a" stroke-dasharray="3 3"/>';
+  s+='<polyline fill="none" stroke="#3b6cf0" stroke-width="1.5" points="'+pts.map(function(v,i){return xs(i)+','+yv(v)}).join(' ')+'"/>';
+  pts.forEach(function(v,i){var bad=Math.abs(v-M.target)>M.tol;s+='<circle cx="'+xs(i)+'" cy="'+yv(v)+'" r="2.4" fill="'+(bad?'#d9534f':'#3b6cf0')+'"/>'});return s+'</svg>'}
+/* ---- WIP bar ---- */
+var SB={rows:{},collapsed:false,hover:null},WIP_STAGES=['queue','mail','online','intake','copy','records','review','eng','cashier','signoff','callback','lost'];
+function buildWip(){var el=$('#wip');el.innerHTML='<div class="sb-h" id="sbH"><i>▾</i>Files in progress</div><div class="sb-body" id="sbB"></div>';var body=$('#sbB');
+  WIP_STAGES.forEach(function(k,i){if(k==='callback'||k==='intake')body.appendChild(document.createElement('hr'));var d=document.createElement('div');d.className='si';d.dataset.k=k;d.innerHTML=ic(STEP_ICON[k])+'<span>'+STEP_LABEL[k]+'</span><b>0</b>';body.appendChild(d);SB.rows[k]=d});
+  $('#sbH').addEventListener('click',function(){SB.collapsed=!SB.collapsed;el.classList.toggle('collapsed',SB.collapsed);hideSbTip()});
+  body.addEventListener('mouseover',function(e){var r=e.target.closest('.si');if(r)showSbTip(r)});body.addEventListener('mouseleave',hideSbTip)}
+function wipCounts(){var c={};WIP_STAGES.forEach(function(k){c[k]=0});G.queue.forEach(function(){c.queue++});G.F.forEach(function(f){if(f.stage==='queue'||f.done)return;var k=f.stage;if(k==='callbackwait'||k==='callbackdone')k='callback';if(k==='found')k='lost';if(k==='archive')k='issue';if(c[k]!=null)c[k]++});return c}
+function showSbTip(r){SB.hover=r;var k=r.dataset.k,c=wipCounts(),t=$('#sbtip'),late=G.F.filter(function(f){var kk=f.stage;if(kk==='callbackwait'||kk==='callbackdone')kk='callback';if(kk==='found')kk='lost';if(kk==='archive')kk='issue';return !f.done&&kk===k&&(G.t-f.born)>f.sla}).length;
+  t.innerHTML=STEP_LABEL[k]+'<small>'+c[k]+' file'+(c[k]===1?'':'s')+(late?' · '+late+' already past the service standard':'')+'</small>';t.hidden=false;var w=$('.world').getBoundingClientRect(),b=r.getBoundingClientRect();t.style.left=(b.right-w.left+10)+'px';t.style.top=Math.max(4,b.top-w.top+b.height/2-t.offsetHeight/2)+'px'}
+function hideSbTip(){SB.hover=null;$('#sbtip').hidden=true}
+function renderWip(){if(!SB.rows.queue)buildWip();var c=wipCounts();for(var k in SB.rows){var r=SB.rows[k],n=c[k],b=r.lastChild,txt=String(n);if(b.textContent!==txt)b.textContent=txt;r.classList.toggle('zero',!n);r.classList.toggle('hot',n>=TRAY||(k==='queue'&&n>=4))}if(SB.hover)showSbTip(SB.hover)}
+/* ---- applications panel + log ---- */
+function renderApps(){
+  var t0=function(f){return f.clock==null?f.born:f.clock},onHold=function(f){return f.stage==='callbackwait'};
+  var list=G.F.filter(function(f){return !f.done&&(G.showAll||f.stage==='queue'||(!onHold(f)&&(G.t-t0(f))>f.sla*.6))}).sort(function(a,b){return t0(a)-t0(b)}).slice(0,24);
+  var html=list.map(function(f){var hold=onHold(f),age=hold?0:G.t-t0(f),left=f.sla-age,late=left<0,frac=clamp(1-age/f.sla,0,1);return '<div class="app'+(late?' late':'')+'"><div class="nm"><span>'+ic(SOURCES[f.src].icon)+' '+f.name+'</span>'+ic(STEP_ICON[f.stage.replace('callbackwait','callback').replace('callbackdone','callback').replace('found','lost').replace('archive','issue')]||'file')+'</div><div class="stg">'+f.who+' ('+SOURCES[f.src].name+') · '+STEP_LABEL[f.stage.replace('callbackwait','callback').replace('callbackdone','callback').replace('found','lost').replace('archive','issue')]+(f.rework?' · rework ×'+f.rework:'')+'</div><div class="meter"><i style="width:'+Math.round(frac*100)+'%"></i></div><div class="due">'+(hold?'clock paused · back in '+fmtT(Math.max(0,f.hold)):late?'OUTSIDE STANDARD by '+fmtT(-left):fmtT(left)+' left')+'</div></div>'}).join('');
+  if(!html)html='<div class="note">'+(G.F.length?'Everything in the building is comfortably inside its service standard. Tick "Show all files" to see them all.':'No applications yet.')+'</div>';
+  var a=$('#apps');if(a.innerHTML!==html)a.innerHTML=html;
+}
+function updLog(){if(!G.dirty.log)return;G.dirty.log=false;$('#log').innerHTML=G.log.slice(0,12).map(function(l){return '<div class="'+l.cls+'"><span style="font-family:var(--f-mono);color:var(--muted)">'+fmtT(l.t)+'</span> '+l.msg+'</div>'}).join('')}
+/* ---- context menu ---- */
+function openCtx(px,py,tx,ty){
+  var c=$('#ctx'),b=bAt(tx,ty),t=tileAt(tx,ty),h='';
+  var cmBtn=function(attr,icn,label,sub,dis){return '<button type="button" '+attr+(dis?' disabled title="'+dis+'"':'')+'>'+ic(icn)+label+(sub?'<small>'+sub+'</small>':'')+'</button>'};
+  if(b&&b.type!=='hall'){h+='<h4>'+b.name+'</h4>'+cmBtn('data-cx="inspect"','select','Inspect');if(b.ctq)h+=cmBtn('data-cx="coach"','wait','Coach the reviewer',COACH_COST+' coins',b.down>0?'Already being coached':'');if(b.type!=='door')h+=cmBtn('data-cx="remove"','bulldoze','Demolish',Math.floor(BT[b.type].cost/2)+' back')}
+  else if(t&&t.k==='plant'){h+='<h4>Planter</h4><div class="note" style="margin:0">Fixed. Routes bend around it.</div>'}
+  else if(t&&t.k==='wall'){h+='<h4>Concrete wall</h4><div class="note" style="margin:0">Part of the building core. It cannot be moved, removed or built on; partition walls can.</div>'}
+  else{h+='<h4>Build here</h4>';if(!b)h+=cmBtn('data-cx="hall"','hall','Clear aisle','5 coins',capital()<5?'Not enough '+capName():'');
+    CATS.slice(1).forEach(function(cat){Object.keys(BT).forEach(function(k){var d=BT[k];if(d.cat!==cat)return;var err=placeErr(k,tx,ty);h+=cmBtn('data-cx="place" data-k="'+k+'"',d.icon,d.name,d.cost+' coins',err)})});
+    if(b&&b.type==='hall')h+=cmBtn('data-cx="remove"','bulldoze','Remove aisle','2 back')}
+  c.innerHTML=h;c.hidden=false;c.dataset.x=tx;c.dataset.y=ty;var r=$('.world').getBoundingClientRect();c.style.left=clamp(px,4,r.width-200)+'px';c.style.top=clamp(py,4,r.height-c.offsetHeight-4)+'px';
+}
+function closeCtx(){$('#ctx').hidden=true}
+function applyTool(t,drag){
+  if(G.phase!=='run')return;
+  if(G.tool==='select'){if(drag)return;var b=bAt(t.x,t.y);G.sel=b&&b.type!=='hall'?b.id:null;inspKey='';renderTip();if(b)sfxBuilding(b);return}
+  if(G.tool==='bulldoze'){if(drag)return;var b2=bAt(t.x,t.y);if(b2)bulldoze(t.x,t.y);return}
+  var err=placeErr(G.tool,t.x,t.y);if(err){if(!drag)hint(err,true);return}
+  addB(G.tool,t.x,t.y,false);if(G.tool!=='hall'){setTool('select')}
+}
+/* ---- pointer handling ---- */
+function tileFromEvent(e){var r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*CW/r.width,py=(e.clientY-r.top)*CH/r.height,t=fromScreen(px,py),x=Math.floor(t.x),y=Math.floor(t.y);return inB(x,y)?{x:x,y:y,px:px,py:py,sx:e.clientX-r.left,sy:e.clientY-r.top}:null}
+var pd=null,pressT=0;
+function bind(){
+  cv.addEventListener('pointermove',function(e){var t=tileFromEvent(e);G.hover=t;if(pd&&t&&G.tool==='hall'&&(t.x!==pd.x||t.y!==pd.y)){pd={x:t.x,y:t.y};applyTool(t,true)}});
+  cv.addEventListener('pointerleave',function(){G.hover=null});
+  cv.addEventListener('pointerdown',function(e){if(e.button===2)return;var t=tileFromEvent(e);if(!t)return;closeCtx();pd={x:t.x,y:t.y};pressT=Date.now();if(G.tool==='hall')applyTool(t,false);cv.setPointerCapture(e.pointerId);
+    clearTimeout(pd._lp);pd._lp=setTimeout(function(){if(pd){openCtx(t.sx,t.sy,t.x,t.y);pd=null}},550)});
+  cv.addEventListener('pointerup',function(e){if(!pd)return;clearTimeout(pd._lp);var t=tileFromEvent(e);if(t&&G.tool!=='hall'&&t.x===pd.x&&t.y===pd.y)applyTool(t,false);pd=null});
+  cv.addEventListener('contextmenu',function(e){e.preventDefault();var t=tileFromEvent(e);if(t)openCtx(t.sx,t.sy,t.x,t.y)});
+  $('#ctx').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var c=$('#ctx'),x=+c.dataset.x,y=+c.dataset.y,act=b.dataset.cx;closeCtx();
+    if(act==='inspect'){var bb=bAt(x,y);G.sel=bb?bb.id:null;inspKey='';renderTip()}else if(act==='remove')bulldoze(x,y);else if(act==='hall'){var err=placeErr('hall',x,y);if(err)hint(err,true);else addB('hall',x,y,false)}else if(act==='place'){var k=b.dataset.k,err2=placeErr(k,x,y);if(err2)hint(err2,true);else addB(k,x,y,false)}else if(act==='coach'){var bc=bAt(x,y);if(bc)coach(bc)}});
+  $('#dock').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var k=b.dataset.dock;if(CATS.indexOf(k)>=0){flyCat=flyCat===k?null:k;renderDock()}else setTool(k)});
+  $('#fly').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled)return;var k=b.dataset.ftool;setTool(k)});
+  $('#pBuild').addEventListener('click',function(e){var b=e.target.closest('[data-tool]');if(!b||b.disabled)return;setTool(b.dataset.tool)});
+  document.addEventListener('click',function(e){var tb=e.target.closest('[data-train]');if(tb){train(+tb.dataset.train);inspKey='';renderTip();return}var cb=e.target.closest('[data-coach]');if(cb){var b=G.bmap[+cb.dataset.coach];if(b)coach(b);renderTip();return}var ub=e.target.closest('[data-up]');if(ub&&!ub.disabled){buyUp(ub.dataset.up);return}
+    if(!e.target.closest('#ctx')&&!e.target.closest('#cv'))closeCtx();if(!e.target.closest('#tip')&&!e.target.closest('#cv')&&!e.target.closest('#ctx')){/* keep selection */}});
+  $$('.tabs .btn').forEach(function(b){b.addEventListener('click',function(){$$('.tabs .btn').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderPanel(true)})});
+  $('#bPause').addEventListener('click',togglePause);
+  $('#speeds').addEventListener('click',function(e){var b=e.target.closest('[data-speed]');if(!b)return;G.speed=+b.dataset.speed;updHud()});
+  $('#bPaths').addEventListener('click',function(){G.showPaths=!G.showPaths;$('#legend').innerHTML='<div><b>Walking paths</b></div>'+ROLE_ORDER.map(function(r){return '<div><i style="background:'+ROLES[r].col+'"></i>'+ROLES[r].plural+'</div>'}).join('')+'<div><i style="background:rgba(217,83,79,.5)"></i>Floor traffic</div>';updHud()});
+  $('#bRot').addEventListener('click',function(){ROT++;closeCtx();G.hover=null});
+  $('#bData').addEventListener('click',function(){openStats()});$('#bSnap').addEventListener('click',function(){snapshot()});$('#bVoc').addEventListener('click',function(){SX.tab='voc';renderStats();$('#stats').hidden=false});
+  $('#bEnd').addEventListener('click',function(){if(G.phase!=='run')return;if(G.endArm&&G.anim<=G.endArm){G.endArm=0;endShift();return}G.endArm=G.anim+5;var rr=rounds(),r3=rr.r3;
+    if(r3&&r3.min<R3_MIN)hint('Only '+fmtT(r3.min*60)+' since your last change. Round 3 needs about '+R3_MIN+' minutes of data to judge the improvement fairly. Press again within 5 seconds to end anyway.',true);
+    else if(!rr.imps&&G.t<R3_MIN*60)hint('Only '+fmtT(G.t)+' into the baseline. About '+R3_MIN+' minutes makes a fair round 1. Press again within 5 seconds to end anyway.',true);
+    else hint('Press again within 5 seconds to end the shift and open the review.')});
+  var setPanel=function(show){$('.game').classList.toggle('nopanel',!show);$('#bShow').hidden=show;closeCtx();G.hover=null};
+  $('#bHide').addEventListener('click',function(){setPanel(false)});$('#bShow').addEventListener('click',function(){setPanel(true)});
+  $('#showAll').addEventListener('change',function(){G.showAll=this.checked;renderApps()});
+  document.addEventListener('pointerdown',audioInit);document.addEventListener('keydown',audioInit);
+  $('#bMusic').addEventListener('click',function(){audioInit();setMusic(!AU.music)});$('#bSfx').addEventListener('click',function(){audioInit();setSfx(!AU.sfx)});
+  $('#modalBody').addEventListener('click',function(e){var a=e.target.closest('[data-act]');if(!a)return;var act=a.dataset.act;
+    if(act==='scen'){newGame(a.dataset.scen);prewarm(15,PREWARM);startShift();hint(G.sc.hint)}else if(act==='next'){G.shift++;startShift()}else if(act==='again'){newGame(G.scen);renderIntro()}else if(act==='final'){G.phase='final';renderReview(G.hist[G.hist.length-1]);G.phase='review'}else if(act==='copy'){copyText(reviewCsv())}else if(act==='snap'){snapshot()}else if(act==='errlog'){saveFile('permit-office-error-log.csv',tsv2csv(csvOf(ERR_HEAD,errRows())))}});
+  $('#statsBody').addEventListener('click',function(e){var b=e.target.closest('[data-stab]');if(b){SX.tab=b.dataset.stab;renderStats();return}if(e.target.closest('[data-close]')){$('#stats').hidden=true;return}if(e.target.closest('[data-dl]')){saveFile('permit-office-'+SX.tab+'.csv',tsv2csv(SX.csv||''));return}if(e.target.closest('[data-csv]')){copyText(SX.csv||'')}});
+  $('#stats').addEventListener('click',function(e){if(e.target===e.currentTarget)$('#stats').hidden=true});
+  document.addEventListener('keydown',function(e){if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(e.key==='Escape'){closeCtx();G.sel=null;renderTip();if(!$('#stats').hidden)$('#stats').hidden=true}
+    else if(e.key==='p'||e.key==='P')togglePause();else if(e.key==='r'||e.key==='R'){ROT++;closeCtx()}else if(e.key==='e'||e.key==='E'){ROT--;closeCtx()}
+    else if(e.key==='t'||e.key==='T'){var g=$('.game');var show=g.classList.contains('nopanel');g.classList.toggle('nopanel',!show);$('#bShow').hidden=show}});
+}
+function copyText(t){try{navigator.clipboard.writeText(t).then(function(){hint('Copied. Paste it into Excel.')},function(){hint('Could not copy.',true)})}catch(e){hint('Could not copy.',true)}}
+
+/* ================= process data, review, intro ================= */
+var DMAIC='<div class="dmaic"><span><b>Define</b> approval cycle time</span><span><b>Measure</b> cycle time, rework time, DPMO, control charts</span><span><b>Analyze</b> Pareto, utilization, spaghetti</span><span><b>Improve</b> layout, standard work, poka-yoke</span><span><b>Control</b> alarms, huddles</span></div>';
+function tbl(head,rows,leftCols){return '<div class="tblwrap"><table><thead><tr>'+head.map(function(h,i){return '<th'+((leftCols||[]).indexOf(i)>=0?' class="l"':'')+'>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+(rows.length?rows.map(function(r){return '<tr>'+r.map(function(c,i){return '<td'+((leftCols||[]).indexOf(i)>=0?' class="l"':'')+'>'+c+'</td>'}).join('')+'</tr>'}).join(''):'<tr><td colspan="'+head.length+'" class="l" style="color:var(--muted)">Nothing yet.</td></tr>')+'</tbody></table></div>'}
+function csvOf(head,rows){var q=function(v){v=String(v).replace(/<[^>]+>/g,'').replace(/\t/g,' ');return /["\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};return [head.map(q).join('\t')].concat(rows.map(function(r){return r.map(q).join('\t')})).join('\n')}
+function paretoSvg(par,W,H){if(!par.length)return '<div class="note">No defects recorded yet.</div>';var tot=par.reduce(function(a,r){return a+r.n},0),n=par.length,bw=Math.min(60,(W-50)/n-6),x0=40,yb=H-46,hmax=yb-14,s='<svg class="chart pareto" viewBox="0 0 '+W+' '+H+'">';
+  par.forEach(function(r,i){var x=x0+i*(bw+6),h=r.n/par[0].n*hmax;s+='<rect class="bar'+(r.vital?' vital':'')+'" x="'+x+'" y="'+(yb-h)+'" width="'+bw+'" height="'+h+'" rx="3"/><text x="'+(x+bw/2)+'" y="'+(yb-h-3)+'" font-size="9" text-anchor="middle" fill="#27334d">'+r.n+'</text><text x="'+(x+bw/2)+'" y="'+(yb+11)+'" font-size="8" text-anchor="middle" fill="#6b7a96">'+r.cause.split(' ').slice(0,2).join(' ')+'</text><text x="'+(x+bw/2)+'" y="'+(yb+21)+'" font-size="8" text-anchor="middle" fill="#6b7a96">'+r.cause.split(' ').slice(2).join(' ')+'</text>'});
+  s+='<polyline fill="none" stroke="#e0a21b" stroke-width="1.5" points="'+par.map(function(r,i){return (x0+i*(bw+6)+bw/2)+','+(yb-r.cum*hmax)}).join(' ')+'"/><line x1="'+x0+'" x2="'+W+'" y1="'+(yb-.8*hmax)+'" y2="'+(yb-.8*hmax)+'" stroke="#e0a21b" stroke-dasharray="3 3"/><text x="'+(x0-4)+'" y="'+(yb-.8*hmax+3)+'" font-size="8" text-anchor="end" fill="#e0a21b">80%</text></svg>';return s}
+var SX={tab:'overview',csv:''},ST_KEYS=['queue','mail','online','intake','copy','records','review','eng','cashier','signoff','callback','lost'];
+function openStats(){SX.tab='overview';renderStats();$('#stats').hidden=false}
+function renderStats(){
+  var sum=summarize(),tabs=[['overview','Overview'],['crew','Crew'],['desks','Desks'],['files','Files'],['errors','Error log'],['voc','Voice of the customer'],['shifts','Shifts'],['roi','Score']],tab=SX.tab,out={html:'',csv:''};
+  if(tab==='overview'){var k=[['Cycle time · mean',sum.pt.n?fmtT(sum.pt.mean):'—','complete request → permit in hand'],['Cycle time · median',sum.pt.n?fmtT(sum.pt.median):'—',sum.pt.openN?'incl. '+sum.pt.openN+' open: mean '+fmtT(sum.pt.meanAll)+', median '+fmtT(sum.pt.medianAll):'all permits issued'],['Permits issued',sum.issued,sum.onTime+' inside standard, '+sum.late+' outside'],['Rework time',fmtT(sum.wasteT),(sum.issued?Math.round(sum.wastePer):0)+' s per permit, '+sum.reworkN+' events'],['Door to permit',sum.issued?fmtT(sum.grossT):'—','incl. '+fmtT(sum.appT)+' back with the applicant'],['Defects',sum.def,'of '+sum.opps+' opportunities'],['Walking',pct(sum.walkShare),'share of task time'],['Lost applicants',sum.walkouts+sum.abandoned,sum.walkouts+' walk-outs, '+sum.abandoned+' withdrawn'],['Supervisor in meetings',fmtT(sum.meetT),'this shift']];
+    out.html='<div class="kpis">'+k.map(function(x){return '<div class="kpi"><span class="lbl">'+x[0]+'</span><b>'+x[1]+'</b><small>'+x[2]+'</small></div>'}).join('')+'</div>';
+    out.csv=csvOf(['Metric','Value','Note'],k)}
+  if(tab==='crew'){var el=elapsed(),head=['Worker','Role','Skill','Desk','Busy','Walking (of busy)','Idle','Top idle reason'];var rows=G.W.map(function(w){var b=G.bmap[w.home],why=Object.keys(w.S.why).sort(function(a,c){return w.S.why[c]-w.S.why[a]})[0];return [w.name,ROLES[w.role].name,SKILL[w.skill],b?b.name:'',p1(w.S.busyT/el),p1(w.S.busyT?w.S.walkT/w.S.busyT:0),p1(w.S.idleT/el),why?why+' ('+fmtT(w.S.why[why])+')':'']});
+    out.html='<h3>Crew utilization</h3>'+tbl(head,rows,[0,1,2,3,7]);out.csv=csvOf(head,rows)}
+  if(tab==='desks'){var head2=['Desk','Busy','Idle','Files done','In-tray now','Mean','Std dev','Cp','Cpk','Top idle reason'];var rows2=sum.stations.map(function(s){var why=Object.keys(s.why).sort(function(a,c){return s.why[c]-s.why[a]})[0];return [s.name,p1(s.util),p1(s.idle),s.runs,s.tray,s.cap?fx(s.cap.mean,1):'',s.cap?fx(s.cap.sd,2):'',s.cap?fx(s.cap.cp,2):'',s.cap?fx(s.cap.cpk,2):'',why?why+' ('+fmtT(s.why[why])+')':'']});
+    out.html='<h3>Desk utilization and capability</h3>'+tbl(head2,rows2,[0,9])+'<p class="note">Cp compares the spec width to the spread; Cpk also penalises being off centre. Both need at least 5 readings.</p>';out.csv=csvOf(head2,rows2)}
+  if(tab==='files'){var head3=['Shift','File','Applicant','Source','Arrived','Received','Complete at','Issued','Cycle time (s)','Door to permit (s)','Service std (s)','Status','Rework loops','Rework time (s)','Engineering'].concat(ST_KEYS.map(function(k){return 'Time: '+STEP_LABEL[k].toLowerCase()+' (s)'}));var rows3=G.fileLog.slice().reverse().map(function(r){return [r.shift,r.name,r.who,SOURCES[r.src]?SOURCES[r.src].name:'',fmtT(r.born),fmtT(r.recv),fmtT(r.clock),fmtT(r.done),Math.round(r.lead),Math.round(r.gross),Math.round(r.sla),r.status,r.rework,Math.round(r.waste),r.eng?'yes':'no'].concat(ST_KEYS.map(function(k){return Math.round((r.st||{})[k]||0)}))});
+    var headS=['Source','Received','Issued','Inside standard','Avg cycle time (s)'],rowsS=sum.bySrc.map(function(r){return [SOURCES[r.src].name,r.received,r.issued,r.issued?p1(r.onTime/r.issued):'',Math.round(r.lead)]});
+    var ptl=permitTimes();out.html=ptHtml(ptl,false)+'<h3>By source</h3>'+tbl(headS,rowsS,[0])+'<h3>Issued permit history (all shifts)</h3>'+tbl(head3,rows3,[1,2,3,8]);out.csv=csvOf(PT_HEAD,ptRows(ptl))+'\n\n'+csvOf(head3,rows3)}
+  if(tab==='errors'){{var er=errRows();out.html='<h3>Error log</h3><p class="note">Every error and interruption the staff recorded, including the 30 minutes before you arrived (shift 0). '+er.length+' entries. Time lost is the staff time each one cost. Sort it out in Excel.</p>'+tbl(ERR_HEAD,er.slice().reverse().slice(0,60),[2,3,4,5])+(er.length>60?'<p class="note">Showing the latest 60. Download or copy to get all '+er.length+'.</p>':'');out.csv=csvOf(ERR_HEAD,er)}}
+  if(tab==='voc'){out.html='<h3>Voice of the customer</h3><p class="note">Everything customers have told the office lately, exactly as they said it. Some of these are real requirements. Some are wants and some are solutions. Sort them yourselves and write each real requirement so it can be measured.</p>'+tbl(VOC_HEAD,vocRows(),[1,2,3]);out.csv=csvOf(VOC_HEAD,vocRows())}
+  if(tab==='shifts'){var head5=['Shift','Minutes','Issued','Inside std','Outside std','Lost','Cycle time (s)','Rework time (s)','Revenue','Wages','COPQ','Defects','Opps','DPMO','Sigma','Walking'];var rows5=G.hist.concat(G.phase==='run'?[sum]:[]).map(function(h){return [h.shift,fx(h.minutes,1),h.issued,h.onTime,h.late,h.walkouts+h.abandoned,Math.round(h.leadT),Math.round(h.wasteT||0),Math.round(h.revenue),Math.round(h.wages),h.copq,h.def,h.opps,Math.round(h.dpmo),sigTxt(h.sigma),p1(h.walkShare)]});
+    out.html='<h3>Shift by shift</h3>'+tbl(head5,rows5)+'<p class="note">The current shift is included while it runs.</p>';out.csv=csvOf(head5,rows5)}
+  if(tab==='roi'){var head9=['Shift','Minute','Change','Cost'],rows9=G.imps.map(function(i){return [i.shift,fx(i.at.min,1),i.what,i.cost]});out.html=roiHtml();out.csv=csvOf(head9,rows9)}
+  SX.csv=out.csv;
+  $('#statsBody').innerHTML='<header class="ph"><div><span class="kicker">Process data · shift '+G.shift+' · '+fmtT(G.t)+'</span><h2>Measure and analyse</h2></div></header><div class="sxtabs">'+tabs.map(function(t){return '<button type="button" class="btn small'+(t[0]===tab?' on':'')+'" data-stab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'<button type="button" class="btn small" data-csv style="margin-left:auto">Copy for Excel</button><button type="button" class="btn small" data-dl>Download CSV</button><button type="button" class="btn small" data-close>Close</button></div>'+out.html;
+}
+
+/* ---- individual permit times: chart, summary and table ---- */
+function ptChart(pt,W,H){W=W||880;H=H||230;var rows=pt.rows;if(!rows.length)return '<p class="note">No permits with a running clock yet.</p>';
+  var L=46,R=12,T=14,B=26,max=Math.max(60,Math.max.apply(null,rows.map(function(r){return Math.max(r.t,r.sla)}))*1.08),n=rows.length;
+  var X=function(i){return L+(n<2?(W-L-R)/2:i*(W-L-R)/(n-1))},Y=function(v){return T+(H-T-B)*(1-v/max)};
+  var s='<svg class="ptc" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cycle time of each permit, with mean and median"><g font-size="10" fill="var(--muted)">';
+  var step=max>600?120:max>300?60:30;for(var v=0;v<=max;v+=step){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(L-6)+'" y="'+(Y(v)+3)+'" text-anchor="end">'+fmtT(v)+'</text>'}
+  s+='<text x="'+L+'" y="'+(H-6)+'">permits in the order they were issued, then files still open →</text></g>';
+  var ln=function(v,col,dash,lab){if(!pt.n)return '';return '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="'+col+'" stroke-width="2"'+(dash?' stroke-dasharray="6 4"':'')+'/><text x="'+(dash?W-R-4:L+4)+'" y="'+(Y(v)-5)+'" text-anchor="'+(dash?'end':'start')+'" font-size="11" font-weight="700" fill="'+col+'">'+lab+' '+fmtT(v)+'</text>'};
+  s+=ln(pt.mean,'var(--accent)',false,'Mean')+ln(pt.median,'#2f9e7a',true,'Median');
+  var sep=pt.n;if(pt.openN&&pt.n)s+='<line x1="'+((X(sep-1)+X(sep))/2)+'" x2="'+((X(sep-1)+X(sep))/2)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--muted)" stroke-dasharray="2 3"/>';
+  rows.forEach(function(r,i){var c=r.open?'#e08a1b':r.late?'#e05252':'var(--accent)';s+='<circle cx="'+X(i)+'" cy="'+Y(r.t)+'" r="4.2" fill="'+(r.open?'var(--panel)':c)+'" stroke="'+c+'" stroke-width="2"><title>'+r.name+' · '+r.who+' · '+r.state+' · '+fmtT(r.t)+(r.open?' so far':'')+'</title></circle>'});
+  return s+'</svg>'}
+function ptSummary(pt){return '<div class="ptsum"><span><b>Issued</b> '+pt.n+'</span><span><b>Mean</b> '+(pt.n?fmtT(pt.mean):'—')+'</span><span><b>Median</b> '+(pt.n?fmtT(pt.median):'—')+'</span><span class="sep"><b>Including '+pt.openN+' open</b> mean '+(pt.nAll?fmtT(pt.meanAll):'—')+' · median '+(pt.nAll?fmtT(pt.medianAll):'—')+'</span><span class="key"><i class="d1"></i>inside standard <i class="d2"></i>outside <i class="d3"></i>still open (time so far)</span></div>'}
+function ptRows(pt){return pt.rows.map(function(r){return ['#'+r.id,r.name,r.who,SOURCES[r.src].name,r.state,fmtT(r.t)+(r.open?' so far':''),Math.round(r.t),fmtT(r.sla),r.late?'outside':'inside',r.rework,Math.round(r.waste||0)]})}
+var PT_HEAD=['ID','Permit','Applicant','Source','Status','Cycle time','Seconds','Standard','Standard met','Rework loops','Rework time (s)'];
+function ptHtml(pt,collapse){var t=tbl(PT_HEAD,ptRows(pt),[1,2,3,4]);return '<h3>Cycle time of every permit</h3>'+ptSummary(pt)+ptChart(pt)+(collapse?'<details class="ptd"><summary>Show all '+pt.rows.length+' permits</summary>'+t+'</details>':t)+'<p class="note">Files sent back to the applicant are left out until the completed request comes back, because their clock is not running. A mis-filed file keeps its clock running while it is lost.</p>'}
+/* ---- review ---- */
+function roiHtml(){
+  var rr=rounds(),cols=[['Round 1','Baseline, including shift 0',rr.r1],['Round 2','While you were making changes',rr.r2],['Round 3','Since your last change',rr.r3]];
+  var rates=cols.map(function(c){return c[2]&&c[2].leadN?roundRates(c[2]):null});
+  var rows=[['Minutes of data',function(r){return fx(r.min,1)}],['<b>Approval cycle time</b><small style="display:block;font-weight:600;color:var(--muted)">complete request to signed permit</small>',function(r){return r.cycle==null?'—':'<b>'+fmtT(r.cycle)+'</b>'}],['Permits issued',function(r,c){return c.leadN}],['Permits / 10 min',function(r){return fx(r.issued,1)}],['Inside service standard',function(r){return r.onT==null?'—':pct(r.onT)}],['Rework time / permit',function(r){return r.wastePer==null?'—':Math.round(r.wastePer)+' s'}],['Defects / 10 min',function(r){return fx(r.def,1)}]];
+  var cell=function(f){return '<tr><th class="l">'+f[0]+'</th>'+rates.map(function(r,i){return '<td>'+(r?f[1](r,cols[i][2]):'—')+'</td>'}).join('')+'</tr>'};
+  var head='<thead><tr><th class="l"></th>'+cols.map(function(c){return '<th>'+c[0]+'<small>'+c[1]+'</small></th>'}).join('')+'</tr></thead>',verdict='',b=rr.r1,a=rr.r3,sp=Math.round(rr.spend);
+  if(!rr.imps&&!sp)verdict='<p class="note">No changes yet, so everything so far is your baseline. It includes the 30 minutes of records from before you arrived. Round 3 opens when you make a change.</p>';
+  else if(!b||b.leadN<MIN_N)verdict='<div class="roi-sum"><span class="warn">The office was changed before '+MIN_N+' permits had been issued, so there is no baseline to compare against. The score is minus your spend. Start over and measure a baseline first.</span><span><b>Spent</b> '+sp+' coins</span></div>';
+  else if(!a||a.leadN<MIN_N)verdict='<div class="roi-sum"><span class="warn">Only '+(a?a.leadN:0)+' permits issued since your last change. The score appears after '+MIN_N+'. Keep the office running.</span><span><b>Spent</b> '+sp+' coins</span></div>';
+  else{var saved=b.leadSum/b.leadN-a.leadSum/a.leadN,val=Math.round(saved*VAL),sc=val-sp;
+    verdict='<div class="roi-sum"><span><b>Cycle time</b> '+fmtT(b.leadSum/b.leadN)+' → '+fmtT(a.leadSum/a.leadN)+' ('+(saved>=0?'−':'+')+Math.round(Math.abs(saved))+' s)</span><span><b>Value of the improvement</b> '+(val<0?'−':'')+Math.abs(val)+' coins at '+VAL+' per second</span><span><b>Spent</b> '+sp+' coins</span><span class="'+(sc>=0?'good':'warn')+'">Score '+(sc>0?'+':sc<0?'−':'')+Math.abs(sc)+' coins</span>'+(a.leadN<50?'<span class="warn">Only '+a.leadN+' permits since your last change. Cycle time varies a lot from permit to permit. With fewer than 50 permits, a difference of 20 seconds can be chance. Keep the office running.</span>':'')+'</div>'}
+  return '<div><h3>Score</h3><div class="tblwrap"><table class="roi">'+head+'<tbody>'+rows.map(cell).join('')+'</tbody></table></div>'+verdict+(rr.imps?'<details class="implog"><summary>'+rr.imps+' change'+(rr.imps>1?'s':'')+' logged</summary><ul>'+G.imps.map(function(i){return '<li>Shift '+i.shift+' at '+fmtT(i.at.min*60)+' · '+i.what+(i.cost?' · '+(i.cost<0?'+':'−')+Math.abs(i.cost)+' coins':'')+'</li>'}).join('')+'</ul></details>':'')+'</div>';
+}
+function goalHtml(sum){var g=goalCheck(sum),scv=projectScore();return '<div class="goalbox'+(g.met?' met':'')+'"><div class="gl"><span><b style="font-family:var(--f-display)">'+G.sc.name+'</b> · '+G.sc.goal+'</span><span class="flag '+(g.met?'g':'i')+'">'+(g.met?'Goal met':'Not yet')+'</span></div>'+(scv==null?'':'<div class="gl"><span>Score (value of the cycle time removed, minus spend)</span><b class="'+(scv<0?'neg':'')+'">'+(scv>0?'+':'')+scv+' coins</b></div>')+g.rows.map(function(r){return '<div class="gl '+(r.info?'':r.ok?'gok':'gno')+'"><span>'+r.l+'</span><b>'+r.v+'</b></div>'}).join('')+'</div>'}
+function coachHtml(sum){
+  var out=[];
+  if(!sum.opps)out.push('No data was collected this shift. Let some applications through, then review again.');
+  else if(!sum.def)out.push('No defects this shift. A clean run on a small sample does not prove a six sigma process, so keep watching the control charts for drift.');
+  else{var top=sum.pareto[0],share=Math.round(top.n/sum.def*100),low=top.cause.charAt(0).toLowerCase()+top.cause.slice(1),vital=sum.pareto.filter(function(r){return r.vital}).length;
+    out.push('The biggest cause was '+low+', with '+top.n+' of '+sum.def+' defects ('+share+'%). The first '+vital+' cause'+(vital>1?'s':'')+' on the Pareto account for most of the loss. Defects cost about '+sum.copq+' coins this shift.');
+    if(CTQ_CAUSES.indexOf(top.cause)>=0){var st=sum.stations.filter(function(s){return s.cap&&BT[s.type]&&(BT[s.type].cause===top.cause||BT[s.type].over===top.cause)})[0];if(st)out.push('The '+st.name.toLowerCase()+' ran Cp '+fx(st.cap.cp,2)+' and Cpk '+fx(st.cap.cpk,2)+'. '+(st.cap.cp<1?'Cp below 1 means the spread is too wide even when centred: train the reviewer or buy review standard work. ':'')+(st.cap.cp-st.cap.cpk>.25?'Cp well above Cpk means it runs off centre: coach sooner, or buy the daily huddle so it drifts less.':''))}
+    if(ADVICE[top.cause])out.push(ADVICE[top.cause])}
+  var busy=sum.stations.filter(function(s){return s.runs}).sort(function(a,b){return b.util-a.util});if(busy.length){var t=busy[0];if(t.util>=.8)out.push('The '+t.name.toLowerCase()+' was busy '+pct(t.util)+' of the shift, so it is the constraint. Add a second one, train its worker, or take work off it.');var lw=busy[busy.length-1];if(busy.length>1&&lw.util<.3)out.push('The '+lw.name.toLowerCase()+' was busy only '+pct(lw.util)+': you paid someone to wait.')}
+  if(sum.walkShare>.3)out.push('Staff spent '+pct(sum.walkShare)+' of their task time walking: transport and motion waste. Turn on the walking paths view, then move the copier, file room and desks closer to where files flow, and link them with aisles.');
+  if(sum.meetT>sum.minutes*60*.12)out.push('The supervisor was in meetings for '+fmtT(sum.meetT)+'. Files waited for a signature the whole time: delegate routine sign-offs or cut the meetings.');
+  if(sum.walkouts)out.push(sum.walkouts+' applicant'+(sum.walkouts>1?'s':'')+' walked out of the queue at the door. Intake is not keeping up with arrivals.');
+  return out.map(function(p){return '<p>'+p+'</p>'}).join('');
+}
+function renderReview(sum){
+  var final=G.phase==='final',shiftMin=fx(sum.minutes,1),onT=(sum.onTime+sum.late)?sum.onTime/(sum.onTime+sum.late):0;
+  var k=[['Cycle time · mean',sum.pt.n?fmtT(sum.pt.mean):'—','complete request → permit in hand'],['Cycle time · median',sum.pt.n?fmtT(sum.pt.median):'—',sum.pt.openN?'incl. '+sum.pt.openN+' open: mean '+fmtT(sum.pt.meanAll)+', median '+fmtT(sum.pt.medianAll):'all permits issued'],['Permits issued',sum.issued,sum.onTime+' inside standard · '+pct(onT)],['Rework time',fmtT(sum.wasteT),(sum.issued?Math.round(sum.wastePer):0)+' s per permit'],['Door to permit',sum.issued?fmtT(sum.grossT):'—','incl. time back with the applicant'],['Defects',sum.def,'of '+sum.opps+' opportunities'],['Walking',pct(sum.walkShare),'of task time'],['Lost applicants',sum.walkouts+sum.abandoned,'walked out or withdrew']];
+  var prev=G.hist.length>1?G.hist[G.hist.length-2]:null,trend=prev?'<p class="note">Versus shift '+prev.shift+': sigma '+sigTxt(prev.sigma)+' → '+sigTxt(sum.sigma)+', inside standard '+pct((prev.onTime+prev.late)?prev.onTime/(prev.onTime+prev.late):0)+' → '+pct(onT)+', cycle time '+fmtT(prev.leadT)+' → '+fmtT(sum.leadT)+', rework time '+fmtT(prev.wasteT||0)+' → '+fmtT(sum.wasteT)+', walking '+pct(prev.walkShare)+' → '+pct(sum.walkShare)+'. Rates are comparable across shifts of different length; counts are not.</p>':'';
+  var srcT='<div><h3>By source</h3>'+tbl(['Source','Received','Issued','Inside standard','Avg cycle time'],sum.bySrc.map(function(r){return [SOURCES[r.src].name+' ('+SOURCES[r.src].who.toLowerCase()+')',r.received,r.issued,r.issued?pct(r.onTime/r.issued):'—',r.issued?fmtT(r.lead):'—']}),[0])+'</div>';
+  var hist=G.hist.length>1?'<div><h3>Shift by shift</h3>'+tbl(['Shift','Min','Issued','Inside std','Cycle (s)','Rework (s)','Sigma','COPQ','Walking'],G.hist.map(function(h){return [h.shift,fx(h.minutes,1),h.issued,h.onTime,Math.round(h.leadT),Math.round(h.wasteT||0),sigTxt(h.sigma),h.copq,p1(h.walkShare)]}))+'</div>':'';
+  $('#modalBody').innerHTML='<header class="ph"><div><span class="kicker">'+G.sc.name+' · '+(final?'Project report after '+G.hist.length+' shift'+(G.hist.length>1?'s':''):'Shift '+sum.shift+' complete · '+shiftMin+' min')+'</span><h2>'+(final?'Final report':'Process review')+'</h2></div></header>'+goalHtml(sum)+'<div class="kpis">'+k.map(function(x){return '<div class="kpi"><span class="lbl">'+x[0]+'</span><b>'+x[1]+'</b><small>'+x[2]+'</small></div>'}).join('')+'</div>'+
+    srcT+ptHtml(sum.pt,true)+trend+roiHtml()+hist+
+    '<div class="actions">'+(final?'<button type="button" class="btn primary" data-act="next">Keep improving</button><button type="button" class="btn" data-act="again">Start over</button>':'<button type="button" class="btn primary" data-act="next">Back to the office (start shift '+(G.shift+1)+')</button>'+(G.hist.length>1?'<button type="button" class="btn" data-act="final">Project report</button>':''))+'<button type="button" class="btn" data-act="copy">Copy shift data for Excel</button><button type="button" class="btn" data-act="errlog">Download the error log</button><button type="button" class="btn" data-act="snap">Download all data</button></div><p class="fine">Make changes now while the office is on its break, or during the next shift. Everything you change is logged and counted in your spend.</p>';
+  $('#modal').hidden=false;
+}
+function reviewCsv(){var head=['Shift','Minutes','Issued','Inside std','Outside std','Cycle time (s)','Rework time (s)','Revenue','Wages','COPQ','Defects','Opps','DPMO','Sigma','Walking'];return csvOf(head,G.hist.map(function(h){return [h.shift,fx(h.minutes,1),h.issued,h.onTime,h.late,Math.round(h.leadT),Math.round(h.wasteT||0),Math.round(h.revenue),Math.round(h.wages),h.copq,h.def,h.opps,Math.round(h.dpmo),sigTxt(h.sigma),p1(h.walkShare)]}))}
+function renderIntro(){
+  $('#modalBody').innerHTML='<div><span class="kicker">Lean Green Belt team exercise</span><h2>Cut the approval cycle time of the permit office.</h2></div>'+
+  '<p class="lead">Your team has taken over a provincial permit office. It has one product, an approved permit. Applications come from homeowners who walk in, contractors on the online portal, businesses who post theirs and other departments. Each one is checked at intake, logged at records, reviewed by a planner, checked by an engineer when the project is bigger, priced by the cashier and signed by the supervisor. The signed permit then goes to the applicant. The office works, but it is slow and nobody has ever measured it.</p>'+
+  '<ol class="steps">'+
+  '<li><b>1. Watch and measure</b>Process data already holds the records of the 30 minutes before you arrived, marked as shift 0. Everything up to your first change is your baseline. Watch the office for a few minutes before you touch it. Click any desk to see its worker and in-tray. The board on the left of the floor counts the files at every stage. Use the speed buttons if you want it to go faster.</li>'+
+  '<li><b>2. Do the analysis yourselves</b>The game does not draw the SIPOC, the process map or the Pareto for you. Build them in Excel or Miro from what you see. Press Download data now at any moment to save one Excel workbook with every cycle time, the time at each step, the error log and the desk and crew figures. Process data shows the same tables on screen. Voice of the customer lists what customers have said, unsorted, for your VOC.</li>'+
+  '<li><b>3. Decide what to fix</b>The Root causes tab lists what people in the office believe is wrong. Some of it is true and some of it is not. Let your data decide. You can also move desks, walls and equipment, add desks and train staff.</li>'+
+  '<li><b>4. Get scored</b>There is no budget limit, but every coin you spend is counted. Each second you take off the average cycle time is worth '+VAL+' coins. Your score is that value minus what you spent. Let at least 50 permits through after your last change so the result is fair. That takes about 8 minutes at 5× speed.</li>'+
+  '</ol>'+
+  '<p class="note"><b>The one metric that counts.</b> Approval cycle time runs from the moment a complete request is received to the moment the signed permit is on its way to the applicant. Time an application spends back with the applicant for missing documents is not counted. A file that is lost in the file room keeps its clock running.</p>'+
+  '<div class="actions"><button class="btn primary" type="button" data-act="scen" data-scen="asfound">Open the office</button></div>'+
+  '<p class="fine">A shift has no clock. Run it as long as you like, then press End shift &amp; review to see your results and start the next shift. Walking paths shows where people have walked. Rotate turns the floor. Right-click a tile for build options.</p>';
+  $('#modal').hidden=false;
+}
+
+/* ================= audio: synthesised office sounds and a lo-fi tune ================= */
+var AU={ctx:null,music:true,sfx:true,last:{},lastAny:0,noiseBuf:null};
+function audioInit(){if(AU.ctx)return;var C=window.AudioContext||window.webkitAudioContext;if(!C)return;try{AU.ctx=new C()}catch(e){return}
+  var c=AU.ctx;AU.master=c.createGain();AU.master.gain.value=.8;AU.master.connect(c.destination);AU.mg=c.createGain();AU.mg.gain.value=AU.music?.28:0;AU.mg.connect(AU.master);AU.sg=c.createGain();AU.sg.gain.value=AU.sfx?.5:0;AU.sg.connect(AU.master);
+  var n=c.sampleRate,buf=c.createBuffer(1,n,n),d=buf.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;AU.noiseBuf=buf;if(c.state==='suspended')c.resume();musicStart()}
+function tone(t,f,dur,type,vol,o){o=o||{};var c=AU.ctx,osc=c.createOscillator(),g=c.createGain();osc.type=type||'sine';osc.frequency.setValueAtTime(f,t);if(o.slide)osc.frequency.exponentialRampToValueAtTime(o.slide,t+dur);var node=osc;if(o.cutoff){var fl=c.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.cutoff;osc.connect(fl);node=fl}node.connect(g);g.connect(o.bus||AU.sg);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+(o.attack||.006));g.gain.exponentialRampToValueAtTime(.0001,t+dur);osc.start(t);osc.stop(t+dur+.03)}
+function noise(t,dur,vol,ftype,ff,bus){var c=AU.ctx,src=c.createBufferSource();src.buffer=AU.noiseBuf;src.loop=true;var fl=c.createBiquadFilter();fl.type=ftype||'lowpass';fl.frequency.value=ff||1000;var g=c.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);src.connect(fl);fl.connect(g);g.connect(bus||AU.sg);src.start(t,Math.random()*.5);src.stop(t+dur+.02)}
+var SFX={
+  type:function(t){for(var i=0;i<6;i++){noise(t+i*.07+Math.random()*.02,.03,.35,'highpass',3000);tone(t+i*.07,2200+Math.random()*600,.02,'square',.06)}},
+  stamp:function(t){noise(t,.08,.6,'lowpass',500);tone(t,120,.12,'sine',.5,{slide:60})},
+  copier:function(t){for(var i=0;i<5;i++)noise(t+i*.16,.12,.25,'bandpass',1400);tone(t,70,.8,'sawtooth',.08,{cutoff:300})},
+  phone:function(t){[0,.35].forEach(function(o){for(var i=0;i<6;i++)tone(t+o+i*.03,1200+(i%2)*200,.025,'square',.12)})},
+  cash:function(t){tone(t,1760,.06,'square',.12);tone(t+.07,2200,.12,'square',.12);noise(t+.2,.08,.2,'lowpass',900)},
+  coin:function(t){tone(t,1760,.08,'square',.14);tone(t+.08,2349,.3,'square',.14)},
+  bad:function(t){tone(t,330,.18,'square',.14,{slide:200,cutoff:900})},
+  alarm:function(t){[0,.18,.36].forEach(function(o){tone(t+o,1400,.1,'square',.14,{cutoff:2500})})},
+  coach:function(t){tone(t,880,.08,'triangle',.18);tone(t+.1,1175,.16,'triangle',.18)},
+  bell:function(t){[0,7,12].forEach(function(n,i){tone(t+i*.15,660*Math.pow(2,n/12),.6,'sine',.24)})},
+  build:function(t){for(var i=0;i<3;i++){noise(t+i*.13,.05,.5,'lowpass',1200);tone(t+i*.13,200,.06,'triangle',.26)}},
+  hall:function(t){for(var i=0;i<3;i++)noise(t+i*.12,.05,.3,'lowpass',700)},
+  crumble:function(t){noise(t,.4,.4,'lowpass',500)},
+  tada:function(t){[0,4,7,12].forEach(function(n,i){tone(t+i*.06,784*Math.pow(2,n/12),.3,'triangle',.18)});SFX.coin(t+.3)},
+  door:function(t){tone(t,900,.3,'sine',.2,{slide:1200});tone(t+.35,1200,.3,'sine',.2,{slide:900})},
+  cabinet:function(t){noise(t,.2,.35,'lowpass',900);tone(t+.2,160,.08,'sine',.3)},
+  coffee:function(t){for(var i=0;i<4;i++)tone(t+i*.1,300+i*90,.1,'sine',.18,{slide:500+i*90})},
+  meeting:function(t){for(var i=0;i<5;i++)noise(t+i*.09,.06,.2,'bandpass',700+i*80)},
+  paper:function(t){noise(t,.18,.3,'highpass',2500)},
+  review:function(t){SFX.paper(t);SFX.type(t+.15)},
+  tick:function(t){tone(t,1500,.03,'square',.1)}
+};
+function sfx(name,gap){if(!AU.ctx||!AU.sfx||!SFX[name])return;var c=AU.ctx,now=c.currentTime;if(now-AU.lastAny<.04)return;if(now-(AU.last[name]||-9)<(gap==null?.25:gap))return;AU.lastAny=now;AU.last[name]=now;try{SFX[name](now+.01)}catch(e){}}
+var BSND={mailroom:'paper',partition:'hall',intake:'door',issue:'stamp',records:'cabinet',cashier:'cash',review:'review',eng:'review',signoff:'stamp',copier:'copier',fileroom:'cabinet',meeting:'meeting',coffee:'coffee',door:'door',hall:'hall',plant:'paper'};
+function sfxBuilding(b){if(b)sfx(BSND[b.type]||'tick',.05)}
+function sfxStep(w,T,s){if(!AU.ctx||!AU.sfx||G.phase!=='run'||!s)return;var L=s.label||T.label||'';if(/Carrying|Picking|Fetching|Archiving/.test(L))sfx('paper',.3);else if(/Coffee/.test(L))sfx('coffee',.5);else if(/meeting/i.test(L))sfx('meeting',.5)}
+/* lo-fi office groove: 16 bars in F major at 96 bpm */
+var MUS={bpm:96,step:0,next:0,timer:null,
+  chords:[[65,69,72,76],[62,65,69,72],[58,62,65,69],[60,64,67,70],[65,69,72,76],[62,65,69,72],[58,62,65,69],[60,64,67,70],[57,60,64,67],[62,65,69,72],[58,62,65,69],[60,64,67,70],[65,69,72,76],[57,60,64,67],[58,62,65,69],[60,64,67,70]],
+  phrase:[[72,2],[76,1],[77,1],[76,2],[72,2], [74,1],[76,1],[74,2],[69,2],[0,2], [70,2],[74,1],[76,1],[74,2],[70,2], [72,2],[70,1],[69,1],[67,2],[0,2],
+          [72,1],[76,1],[79,2],[77,1],[76,1],[74,2], [74,2],[72,2],[69,2],[0,2], [70,1],[74,1],[77,2],[76,1],[74,1],[72,2], [70,2],[72,2],[72,4]],
+  ending:[[76,1],[77,1],[79,2],[77,1],[76,1],[72,2], [74,2],[76,2],[69,2],[0,2], [70,2],[74,2],[77,2],[76,2], [72,8]]};
+(function(){var seq=[];var put=function(list){list.forEach(function(x){seq.push({n:x[0],len:x[1]});for(var k=1;k<x[1];k++)seq.push(null)})};put(MUS.phrase);put(MUS.phrase.slice(0,20));put(MUS.ending);MUS.seq=seq})();
+function mf(n){return 440*Math.pow(2,(n-69)/12)}
+function musicStart(){if(MUS.timer||!AU.ctx)return;MUS.next=AU.ctx.currentTime+.15;MUS.timer=setInterval(musicTick,110)}
+function musicTick(){if(!AU.ctx||!AU.music)return;var c=AU.ctx,dt=60/MUS.bpm/2;while(MUS.next<c.currentTime+.4){playStep(MUS.step%MUS.seq.length,MUS.next,dt);MUS.step++;MUS.next+=dt}}
+function playStep(i,t,dt){var bar=Math.floor(i/8),k=i%8,ch=MUS.chords[bar%16],e=MUS.seq[i],bus={bus:AU.mg};
+  if(e&&e.n){var d=dt*e.len;tone(t,mf(e.n-12),d*1.05,'triangle',.42,{bus:AU.mg,attack:.01,cutoff:1800});tone(t,mf(e.n-12)*1.003,d,'sine',.14,bus)}
+  if(k===0||k===4)tone(t,mf(ch[0]-24),dt*2.5,'triangle',.45,{bus:AU.mg,attack:.01});
+  if(k===2||k===6)tone(t,mf(ch[2]-24),dt*1.4,'triangle',.22,bus);
+  if(k===0)ch.forEach(function(n,j){tone(t+j*.015,mf(n-12),dt*3.5,'sine',.07,{bus:AU.mg,attack:.03})});
+  noise(t,.02,k%2?.035:.02,'highpass',8000,AU.mg);if(k===0||k===4)tone(t,90,.14,'sine',.35,{bus:AU.mg,slide:40});if(k===4)noise(t,.09,.08,'bandpass',1600,AU.mg)}
+function setMusic(on){AU.music=on;if(AU.mg)AU.mg.gain.setTargetAtTime(on?.28:0,AU.ctx.currentTime,.05);var b=$('#bMusic');b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))}
+function setSfx(on){AU.sfx=on;if(AU.sg)AU.sg.gain.setTargetAtTime(on?.5:0,AU.ctx.currentTime,.05);var b=$('#bSfx');b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))}
+
+/* ================= main loop ================= */
+var last=0,acc=0;
+function frame(ts){
+  var dt=Math.min(.1,(ts-last)/1000||0);last=ts;G.anim+=dt;
+  var rt=ROT*Math.PI/2;if(ROTA!==rt){var kk=Math.min(1,dt*7);ROTA+=(rt-ROTA)*kk;if(Math.abs(rt-ROTA)<.003)ROTA=rt}
+  var tgt=G.showPaths?1:0;if(CAMV!==tgt){CAMV+=Math.sign(tgt-CAMV)*Math.min(Math.abs(tgt-CAMV),dt*1.6)}
+  setView(CAMV<.5?4*CAMV*CAMV*CAMV:1-Math.pow(-2*CAMV+2,3)/2);
+  if(G.phase==='run'&&!G.paused){var sdt=dt*G.speed,steps=Math.ceil(sdt/.05);for(var i=0;i<steps;i++)tick(sdt/steps)}
+  draw();acc+=dt;if(acc>.15){acc=0;updHud();renderWip();renderApps();updLog();renderPanel(G.dirty.all);renderDock();if(G.sel!=null)renderTip();G.dirty.all=false}
+  requestAnimationFrame(frame);
+}
+function sizeCanvas(){}
+newGame('asfound');bind();renderIntro();renderPanel(true);renderDock();updHud();renderWip();renderApps();requestAnimationFrame(frame);
+window.PermitOffice={prewarm:prewarm,state:function(){return G},tick:tick,bulldoze:bulldoze,newGame:newGame,startShift:startShift,endShift:endShift,addB:addB,train:train,buyUp:buyUp,coach:coach,placeErr:placeErr,iso:function(x,y){return iso(x,y)},audio:function(){return {AU:AU,MUS:MUS,SFX:SFX,playStep:playStep}}};
+})();
+</script>
+</body>
+</html>
