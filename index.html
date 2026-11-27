@@ -491,7 +491,7 @@ function clerkJob(w,b){
     var call=b.tray.filter(function(f){return f.stage==='callback'})[0];
     if(call){steps.push(walkStep(sp.x,sp.y),{x:sp.x,y:sp.y,dur:5,fn:function(){call.stage='callbackwait';call.hold=CALLBACK;waste(call,5,'phone');sfx('phone',.5)}});return mkTask({busy:true,label:'Phoning the applicant',station:b,steps:steps,tail:true})}
     var intakeOf=function(f,label,copyLabel,work){/* open an application at the counter, then copy or print it before it goes to Records */
-      steps.push(walkStep(sp.x,sp.y),{x:sp.x,y:sp.y,dur:work,fn:function(w){if(f.stage==='queue'){var i=G.queue.indexOf(f);if(i<0)return;G.queue.splice(i,1)}else{var k=b.tray.indexOf(f);if(k>=0)b.tray.splice(k,1)}f.stage='intake';f.at=null;if(f.recv==null){f.recv=G.t;f.clock=G.t}f.handle+=work;
+      steps.push(walkStep(sp.x,sp.y),{x:sp.x,y:sp.y,dur:work,start:function(w){if(f.stage==='queue')f.serving=w.id},fn:function(w){if(f.stage==='queue'){var i=G.queue.indexOf(f);if(i<0)return;G.queue.splice(i,1)}else{var k=b.tray.indexOf(f);if(k>=0)b.tray.splice(k,1)}f.stage='intake';f.at=null;if(f.recv==null){f.recv=G.t;f.clock=G.t}f.handle+=work;
           var S=SOURCES[f.src],base=f.src==='online'?S.inc:(G.up.checklist?Math.min(S.inc,.05):S.inc);var bad=Math.random()<errP(base,w);f.incomplete=bad;rec('intake',!bad,'Incomplete application accepted',0,b.name);b.S.runs++;sfx('type',.3);
           if(!G.up.eforms||f.src!=='online'){var cp=stations('copier');if(cp.length&&!(G.up.eforms&&f.src==='online')){var c=nearest(cp,w),csp=spot(c);f.stage='copy';f.carried=w.id;w.carry=f;
             queueStep(w,{x:csp.x,y:csp.y,dur:COPY_T,label:copyLabel,gate:function(){var c2=G.bmap[c.id];return !!(c2&&(!c2.user||c2.user===w.id))},gateWhy:'Copier busy',start:function(w){var c2=G.bmap[c.id];if(c2)c2.user=w.id;sfx('copier',.4)},fn:function(w){var c2=G.bmap[c.id];if(c2)c2.user=null;f.handle+=COPY_T;sendTo(f,'records',w)}});return}}
@@ -776,8 +776,10 @@ function drawWorker(w){
   else if(!w.task&&/full|busy|batch|coach/i.test(w.wait)){icon('wait',x,y-34,13)}
   if(w.task&&w.task.brk){icon('coffee',x,y-34,13)}if(w.task&&w.task.meet){icon('meeting',x,y-34,13)}
 }
+function servedAt(f){if(!f.serving)return null;var w=G.W.filter(function(x){return x.id===f.serving})[0];if(!w||!w.task||w.task.mode!=='work'||!w.task.station||w.task.station.step!=='intake')return null;return w.task.station}
+function applicantPos(f,i){var b=servedAt(f);if(b){var sp=spot(b),cx=2*(b.x+.5)-sp.x,cy=2*(b.y+.5)-sp.y;if(blocked(Math.floor(cx),Math.floor(cy))){cx=sp.x+.32;cy=sp.y+.32}return {x:cx,y:cy}}var door=G.B.filter(function(d){return d.type==='door'})[0];if(!door)return null;return {x:door.x+1.1+(i%4)*.55,y:door.y+.3+Math.floor(i/4)*.5+(i%2)*.15}}
 function drawApplicant(f,i){
-  var door=G.B.filter(function(b){return b.type==='door'})[0];if(!door)return;var p=iso(door.x+1.1+(i%4)*.55,door.y+.3+Math.floor(i/4)*.5+(i%2)*.15),x=p.x,y=p.y;
+  var q=applicantPos(f,i);if(!q)return;if(f.ax==null){f.ax=q.x;f.ay=q.y}else{f.ax+=(q.x-f.ax)*.12;f.ay+=(q.y-f.ay)*.12}var p=iso(f.ax,f.ay),x=p.x,y=p.y;
   ctx.fillStyle='rgba(40,50,80,.15)';ctx.beginPath();ctx.ellipse(x,y,5,2.2,0,0,Math.PI*2);ctx.fill();
   var cols=['#f3a3a0','#ffd36e','#8fd3ff','#7fd1a1','#c9a9f5'],col=cols[f.id%cols.length];
   ctx.strokeStyle='#4a5570';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-1.5,y-5);ctx.lineTo(x-1.5,y);ctx.moveTo(x+1.5,y-5);ctx.lineTo(x+1.5,y);ctx.stroke();ctx.lineWidth=1;
@@ -799,7 +801,7 @@ function draw(){
   var objs=[];
   for(var y2=0;y2<N;y2++)for(var x2=0;x2<N;x2++){var t=G.tiles[y2][x2];if(t.k==='plant')objs.push({d:dk(x2,y2),f:drawPlanter.bind(null,x2,y2)});if(t.k==='wall')objs.push({d:dk(x2,y2),f:drawWall.bind(null,x2,y2)});if(t.b){var b=G.bmap[t.b];if(b.type==='partition')objs.push({d:dk(x2,y2),f:drawPartition.bind(null,b)});else if(b.type!=='hall')objs.push({d:dk(x2,y2)+(b.type==='door'?-.2:0),f:drawBuilding.bind(null,b)})}}
   G.W.forEach(function(w){objs.push({d:dk(w.x,w.y)+.02,f:drawWorker.bind(null,w)})});
-  G.queue.forEach(function(f,i){var door=G.B.filter(function(b){return b.type==='door'})[0];if(door)objs.push({d:dk(door.x+1.1+(i%4)*.55,door.y+.3)+.03,f:drawApplicant.bind(null,f,i)})});
+  var qi=0;G.queue.forEach(function(f){var i=servedAt(f)?0:qi++,q=applicantPos(f,i);if(q)objs.push({d:dk(f.ax==null?q.x:f.ax,f.ay==null?q.y:f.ay)+.03,f:drawApplicant.bind(null,f,i)})});
   objs.sort(function(a,b){return a.d-b.d}).forEach(function(o){o.f()});
   if(G.tool!=='select'&&G.tool!=='bulldoze'&&G.hover&&G.phase==='run'){var err=placeErr(G.tool,G.hover.x,G.hover.y),gc=iso(G.hover.x+.5,G.hover.y+.5);poly(dia(gc.x,gc.y,1,0),err?'rgba(217,83,79,.25)':'rgba(47,158,122,.25)',err?'#d9534f':'#2f9e7a')}
 }
